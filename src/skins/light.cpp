@@ -1,8 +1,8 @@
-// Keys and Light: metro's layout (big light heading, large document, a strip
-// of flat tiles in controller order) where every tile keeps its button's own
-// colour in all modes, as in ameno. The mode shows in the cursor and tags; a
-// bar along the bottom of the pending tile counts down to the commit.
-// "keys" is the dark version, "light" a daytime light theme.
+// Light: a daytime theme. Metro's layout (big light heading, large document,
+// a strip of flat tiles in controller order) where every tile keeps its
+// button's own colour in all modes, as in ameno. The mode shows in the cursor
+// and tags; a bar along the bottom of the pending tile counts down to the
+// commit.
 #include "family.h"
 
 namespace {
@@ -96,5 +96,4 @@ private:
 };
 }  // namespace
 
-Skin* makeKeys() { static Keys s("keys", darkPalette()); return &s; }
 Skin* makeLight() { static Keys s("light", lightPalette()); return &s; }

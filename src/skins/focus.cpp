@@ -66,7 +66,7 @@ public:
         for (int i = 0; i < (int)items.size(); ++i) {
             const bool on = i == sel;
             if (on) g.fill({(Gfx::W - w) / 2, y, w, f.lineH() + 14}, P.letters);
-            g.drawCentered(on ? fb : f, Gfx::W / 2, y + 7, items[i], on ? P.dark : Color{169, 163, 191});
+            g.drawCentered(on ? fb : f, Gfx::W / 2, y + 7, items[i], on ? P.dark : Color{205, 200, 225});
             y += lh;
         }
     }

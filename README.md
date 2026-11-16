@@ -19,7 +19,7 @@ indicates the current mode.
 
 ## Styles
 
-Five variations on one Metro-style design, picked in the − app menu:
+Four variations on one Metro-style design, picked in the − app menu:
 highlight *style* and press A, or D-pad left/right, to cycle while the menu
 stays open as a preview. The choice is saved in `settings.ini` next to the
 notes.
@@ -30,12 +30,13 @@ notes.
 |---|---|
 | **metro** (default) | Black canvas, big light heading, flat colour tiles in controller order with per-mode palettes, TV-safe margins. |
 | **ameno** | After the ameno TV web app: slim top bar (brand, counts, small controller diagram, clock), large document, and a status line of flat button badges with their groups, the pending character's cycle, mode tags and a commit timer. |
-| **keys** | Metro's layout where every tile keeps its button's own colour in all modes; the mode shows in the cursor and tags, and a bar on the pending tile counts down to the commit. |
-| **light** | The same as keys in a light, daytime theme. |
+| **light** | A daytime light theme: metro's tile strip where every tile keeps its button's own colour in all modes; the mode shows in the cursor and tags, and a bar on the pending tile counts down to the commit. |
 | **focus** | Distraction-free: a quiet top line and a large centred column of text. The status line stays muted while you write and comes up in colour when you act; the commit timer sits under the pending character. |
 
 All but metro share the ameno conventions (`src/skins/family.h`):
 
+* **Vivid palette.** Near-black background, fully saturated accents and
+  greys at 6.8:1 contrast or better, so colours hold up on cheap TV panels.
 * **Button colours.** Each button position has its own colour wherever it
   appears: bottom green, right red, left blue, top yellow (Xbox A, B, X, Y;
   on a Switch controller B, A, Y, X), D-pad down orange, left violet, up

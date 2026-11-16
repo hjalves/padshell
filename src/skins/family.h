@@ -26,10 +26,12 @@ struct Palette {
     bool light;
 };
 
+// Vivid and high-contrast so it survives cheap TV panels: near-black
+// background, fully saturated accents, and greys at >= 6.8:1 contrast.
 inline const Palette& darkPalette() {
-    static const Palette p{{12, 10, 20},    {22, 19, 31},   {42, 37, 64},  {93, 88, 115},
-                           {244, 242, 250}, {12, 10, 20},   {255, 79, 163}, {61, 220, 132},
-                           {255, 77, 94},   {255, 210, 63}, false};
+    static const Palette p{{5, 4, 10},      {24, 21, 36},   {48, 43, 72},  {150, 145, 175},
+                           {255, 255, 255}, {5, 4, 10},     {255, 45, 150}, {0, 230, 110},
+                           {255, 45, 75},   {255, 224, 0},  false};
     return p;
 }
 
@@ -44,15 +46,15 @@ inline const Palette& lightPalette() {
 // Y yellow; on a Switch controller those positions are B, A, Y, X).
 inline Color buttonColor(Btn b, bool light = false) {
     switch (b) {
-        case South: return light ? Color{31, 174, 96} : Color{61, 220, 132};
-        case East: return light ? Color{224, 52, 69} : Color{255, 77, 94};
-        case West: return light ? Color{29, 155, 209} : Color{76, 201, 240};
-        case North: return light ? Color{214, 160, 0} : Color{255, 210, 63};
-        case DDown: return light ? Color{232, 128, 0} : Color{255, 159, 28};
-        case DLeft: return light ? Color{124, 77, 255} : Color{179, 136, 255};
-        case DUp: return light ? Color{15, 170, 145} : Color{46, 230, 197};
-        case DRight: return light ? Color{214, 58, 176} : Color{255, 95, 210};
-        default: return light ? Color{224, 53, 138} : Color{255, 79, 163};
+        case South: return light ? Color{31, 174, 96} : Color{0, 230, 110};
+        case East: return light ? Color{224, 52, 69} : Color{255, 45, 75};
+        case West: return light ? Color{29, 155, 209} : Color{0, 176, 255};
+        case North: return light ? Color{214, 160, 0} : Color{255, 224, 0};
+        case DDown: return light ? Color{232, 128, 0} : Color{255, 140, 0};
+        case DLeft: return light ? Color{124, 77, 255} : Color{160, 100, 255};
+        case DUp: return light ? Color{15, 170, 145} : Color{0, 230, 190};
+        case DRight: return light ? Color{214, 58, 176} : Color{255, 60, 220};
+        default: return light ? Color{224, 53, 138} : Color{255, 45, 150};
     }
 }
 
@@ -60,12 +62,12 @@ inline Color buttonColor(Btn b, bool light = false) {
 inline Color charColor(uint32_t c, const Palette& p) {
     const bool l = p.light;
     if (c >= 'a' && c <= 'z') return p.text;
-    if (c >= 'A' && c <= 'Z') return l ? Color{15, 150, 128} : Color{46, 230, 197};
-    if (c >= '0' && c <= '9') return l ? Color{190, 140, 0} : Color{255, 210, 63};
-    if (c < 128 && std::strchr("([{<)]}>", (int)c)) return l ? Color{200, 50, 165} : Color{255, 95, 210};
-    if (c == '"' || c == '\'') return l ? Color{31, 160, 90} : Color{61, 220, 132};
-    if (c < 128 && std::strchr("-=+*/^~#%@", (int)c)) return l ? Color{29, 140, 200} : Color{76, 201, 240};
-    return l ? Color{124, 77, 255} : Color{179, 136, 255};
+    if (c >= 'A' && c <= 'Z') return l ? Color{15, 150, 128} : Color{0, 230, 190};
+    if (c >= '0' && c <= '9') return l ? Color{190, 140, 0} : Color{255, 224, 0};
+    if (c < 128 && std::strchr("([{<)]}>", (int)c)) return l ? Color{200, 50, 165} : Color{255, 60, 220};
+    if (c == '"' || c == '\'') return l ? Color{31, 160, 90} : Color{0, 230, 110};
+    if (c < 128 && std::strchr("-=+*/^~#%@", (int)c)) return l ? Color{29, 140, 200} : Color{0, 176, 255};
+    return l ? Color{124, 77, 255} : Color{170, 120, 255};
 }
 
 inline Color modeColor(MultiTap::Mode m, const Palette& p) {
@@ -144,7 +146,7 @@ inline void document(Gfx& g, Rect r, const EditorView& v, const Palette& p, cons
     const int cy = r.y + ((int)rows.size() - 1 - top) * s.lineH;
     const Color mc = modeColor(v.mode(), p);
     if (v.tap->hasPending()) {
-        g.fill({cx, cy, f.cellW(), s.lineH}, p.light ? p.surface : Color{31, 27, 43});
+        g.fill({cx, cy, f.cellW(), s.lineH}, p.surface);
         g.print(f, cx, cy + dy, v.tap->pendingText(), buttonColor(pendingButton(v), p.light));
         g.fill({cx, cy + s.lineH - s.cursorH, f.cellW(), s.cursorH}, mc);
     } else if (blinkOn()) {

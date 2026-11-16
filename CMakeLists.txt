@@ -27,7 +27,7 @@ add_executable(padshell
   src/skin.cpp
   src/skins/metro.cpp
   src/skins/ameno.cpp
-  src/skins/keys.cpp
+  src/skins/light.cpp
   src/skins/focus.cpp
   src/apps/editor.cpp
 )

@@ -36,7 +36,7 @@ public:
     }
 
     void editor(Gfx& g, Rect a, const EditorView& v) override {
-        Font& meta = g.font(kMono, 15);
+        Font& meta = g.font(kMono, 17);
         g.draw(meta, kM, kTopY + 44, std::to_string(v.lineCount()) + (v.lineCount() == 1 ? " line" : " lines") +
                                  " \xC2\xB7 " + std::to_string(v.chars()) + " chars" + (v.modified ? " \xC2\xB7 unsaved" : ""),
                P.muted);
@@ -55,7 +55,7 @@ public:
         for (int i = 0; i < (int)items.size(); ++i) {
             bool on = i == sel;
             if (on) g.fill({kM, y, 600, 64}, P.letters);
-            g.draw(on ? fb : f, kM + 21, y + (64 - f.lineH()) / 2, items[i], on ? P.dark : Color{169, 163, 191});
+            g.draw(on ? fb : f, kM + 21, y + (64 - f.lineH()) / 2, items[i], on ? P.dark : Color{205, 200, 225});
             y += 72;
         }
         // Status line becomes the menu's hints.
@@ -100,8 +100,8 @@ private:
         auto label = [&](Btn b, int bx, int by, int w, int h, Color c) {
             g.drawCentered(lf, x + bx + w / 2, y + by + (h - lf.lineH()) / 2, btnLabel(b), (held & b) ? P.dark : c);
         };
-        box(ZL, 9, 0, 37, 12, buttonColor(South)); label(ZL, 9, 0, 37, 12, Color{138, 132, 163});
-        box(ZR, 140, 0, 37, 12, buttonColor(East)); label(ZR, 140, 0, 37, 12, Color{138, 132, 163});
+        box(ZL, 9, 0, 37, 12, buttonColor(South)); label(ZL, 9, 0, 37, 12, P.muted);
+        box(ZR, 140, 0, 37, 12, buttonColor(East)); label(ZR, 140, 0, 37, 12, P.muted);
         box(L, 0, 16, 56, 9, P.caps);
         box(R, 131, 16, 56, 9, P.text);
         for (auto [b, bx, by] : {std::tuple{DUp, 28, 32}, {DDown, 28, 63}, {DLeft, 13, 47}, {DRight, 43, 47}})
