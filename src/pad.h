@@ -39,9 +39,13 @@ struct Gamepad {
     bool rep(Btn b) const { return repeat & b; }
 };
 
-// Menus select with the bottom face button and cancel with the right one
-// (Xbox A / B; on a Switch controller that is B / A).
+// Menus confirm with the A button and cancel with B, wherever the platform
+// prints them: A is the right button on Switch, the bottom one on Xbox pads.
+#ifdef __SWITCH__
+constexpr Btn kConfirm = East, kBack = South;
+#else
 constexpr Btn kConfirm = South, kBack = East;
+#endif
 
 // The label printed on the button in each position, for on-screen hints.
 inline const char* btnLabel(Btn b) {

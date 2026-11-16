@@ -105,13 +105,10 @@ void samplePad(uint32_t& held, float& lx, float& ly, float& rx, float& ry) {
     held = 0;
     lx = ly = rx = ry = 0;
 
-    // SDL's A/B/X/Y follow the *label* on Switch (A is the right/East button)
-    // and the *position* elsewhere (A is the bottom/South button).
-#ifdef __SWITCH__
-    const Btn aBtn = East, bBtn = South, xBtn = North, yBtn = West;
-#else
+    // SDL's A/B/X/Y are positional on every platform, Xbox-style: A is the
+    // bottom button. That includes the Switch port, whose mapping is
+    // "a:b1,b:b0,x:b3,y:b2", i.e. SDL A = Nintendo B.
     const Btn aBtn = South, bBtn = East, xBtn = West, yBtn = North;
-#endif
     struct Map { SDL_GameControllerButton b; uint32_t bit; };
     const Map map[] = {
         {SDL_CONTROLLER_BUTTON_A, aBtn}, {SDL_CONTROLLER_BUTTON_B, bBtn},

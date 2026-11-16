@@ -29,7 +29,7 @@ LT/RT/LB are ZL/ZR/L.)
 | ZL (hold) | numbers and symbols (green cursor) |
 | ZR (hold) | newline, space, backspace, delete line (red cursor) |
 | L | toggle uppercase |
-| + | editor menu (save, quit). In menus: B select, A cancel, D-pad up/down move |
+| + | editor menu (save, quit). In menus: A select, B cancel, D-pad up/down move |
 | − | app menu |
 
 ### Entering text
