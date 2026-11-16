@@ -48,6 +48,7 @@ if(NINTENDO_SWITCH)
   )
   nx_create_nro(padshell
     NACP padshell.nacp
+    ICON ${CMAKE_CURRENT_SOURCE_DIR}/icon/icon.jpg  # 256x256, made from icon/icon.svg
     ROMFS ${CMAKE_CURRENT_SOURCE_DIR}/romfs
   )
 else()
