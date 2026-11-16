@@ -9,6 +9,7 @@
 #include <atomic>
 #include <memory>
 #include <optional>
+#include <pthread.h>
 #include <string>
 
 #include "url.h"
@@ -34,10 +35,11 @@ Response fetch(const Url& url, const std::string& knownHostsPath, std::atomic<in
 // Replaces the remembered certificate for host:port.
 void trustCertificate(const std::string& knownHostsPath, const std::string& hostPort, const std::string& fingerprint);
 
-// Runs requests on one long-lived worker thread, one at a time, so network
-// calls never overlap and no thread is created per request. start()
-// replaces whatever is queued and abandons the request in flight (its
-// result is discarded).
+// Runs requests on one worker thread, one at a time, so network calls never
+// overlap and no thread is created per request. start() replaces whatever
+// is queued and abandons the request in flight (its result is discarded).
+// The destructor stops and joins the worker: threads must not outlive the
+// app on the Switch.
 class Fetcher {
 public:
     Fetcher();
@@ -54,6 +56,8 @@ public:
 
 private:
     std::shared_ptr<Shared> s_;
+    pthread_t thread_{};
+    bool started_ = false;
 };
 
 }  // namespace gem

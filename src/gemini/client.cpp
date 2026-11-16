@@ -291,10 +291,9 @@ Fetcher::Fetcher() : s_(std::make_shared<Shared>()) {
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setstacksize(&attr, 512 * 1024);  // TLS handshakes use plenty of stack
-    pthread_t thread;
     auto* holder = new std::shared_ptr<Shared>(s_);
-    if (pthread_create(&thread, &attr, worker, holder) == 0) {
-        pthread_detach(thread);  // libsysbase ignores the attr's detach state
+    if (pthread_create(&thread_, &attr, worker, holder) == 0) {
+        started_ = true;
     } else {
         delete holder;
         s_.reset();
@@ -302,13 +301,19 @@ Fetcher::Fetcher() : s_(std::make_shared<Shared>()) {
     pthread_attr_destroy(&attr);
 }
 
+// The worker must be gone before the app exits. On the Switch, homebrew
+// launched from hbmenu shares one process with whatever runs next, so a
+// thread left behind keeps running on memory the next program reuses (this
+// crashed the app on later launches). Cancel, wake it and join it.
 Fetcher::~Fetcher() {
     if (!s_) return;
     cancel();
-    std::lock_guard<std::mutex> lock(s_->m);
-    s_->quit = true;
-    s_->cv.notify_all();
-    // The worker owns a reference to the shared state and exits on its own.
+    {
+        std::lock_guard<std::mutex> lock(s_->m);
+        s_->quit = true;
+        s_->cv.notify_all();
+    }
+    if (started_) pthread_join(thread_, nullptr);
 }
 
 void Fetcher::start(const Url& url, const std::string& knownHostsPath) {
