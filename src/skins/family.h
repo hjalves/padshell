@@ -142,8 +142,8 @@ inline const Palette night{{0, 0, 0}, {14, 12, 11}, {32, 29, 27}, {128, 120, 111
     {{58, 140, 156}, {149, 129, 35}, {207, 73, 174}, {37, 145, 74}, {46, 132, 197}, {144, 107, 209}}, false};
 
 // Deep space: pure black, white text, a pale blue accent and moon's cool
-// colours. Paired with the moving starfield background in ameno.cpp.
-inline const Palette starfield{{0, 0, 0}, {20, 22, 30}, {44, 48, 64}, {180, 188, 205}, {255, 255, 255}, {0, 0, 0},
+// colours. Made for the starfield (settings), which works with any theme.
+inline const Palette space{{0, 0, 0}, {20, 22, 30}, {44, 48, 64}, {180, 188, 205}, {255, 255, 255}, {0, 0, 0},
     {170, 215, 255}, {40, 240, 135}, {255, 75, 100}, {255, 232, 50},
     {{40, 240, 135}, {255, 75, 100}, {60, 175, 255}, {255, 232, 50}, {255, 145, 30}, {165, 130, 255}, {30, 235, 225}, {255, 85, 225}},
     {{150, 215, 255}, {255, 232, 50}, {255, 85, 225}, {40, 240, 135}, {60, 175, 255}, {175, 145, 255}}, false};

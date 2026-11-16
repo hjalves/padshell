@@ -1,5 +1,5 @@
-// Owns the apps and the app launcher (press Minus). All drawing is done by
-// the current skin (see skin.h).
+// Owns the apps and the app launcher (press Minus), whose settings page
+// holds the theme, font and starfield. All drawing is done by the skin.
 #pragma once
 #include <memory>
 #include <string>
@@ -25,6 +25,7 @@ private:
     std::vector<std::unique_ptr<App>> apps_;
     int current_ = 0;
     bool launcher_ = false;
+    bool settings_ = false;  // the launcher's settings page is open
     int sel_ = 0;
     bool running_ = true;
     Gamepad pad_;  // last input, for controller diagrams

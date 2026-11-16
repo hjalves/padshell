@@ -97,6 +97,8 @@ int fontCount();
 int fontIndex();
 std::string fontName(int i);
 void selectFont(int i);
+bool starfield();  // moving starfield behind any theme
+void setStarfield(bool on);
 void loadSettings(const std::string& path);
 
 // --- helpers shared by skins ---

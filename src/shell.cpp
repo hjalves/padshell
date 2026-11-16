@@ -27,10 +27,12 @@ void Shell::switchTo(int index) {
 }
 
 std::vector<std::string> Shell::launcherItems() const {
+    if (settings_)
+        return {"theme: " + skins::themeName(skins::themeIndex()), "font: " + skins::fontName(skins::fontIndex()),
+                std::string("starfield: ") + (skins::starfield() ? "on" : "off")};
     std::vector<std::string> items;
     for (const auto& a : apps_) items.push_back(a->heading());
-    items.push_back("theme: " + skins::themeName(skins::themeIndex()));
-    items.push_back("font: " + skins::fontName(skins::fontIndex()));
+    items.push_back("settings");
     items.push_back("quit");
     return items;
 }
@@ -39,6 +41,7 @@ void Shell::update(const Gamepad& pad) {
     pad_ = pad;
     if (pad.hit(Minus)) {
         launcher_ = !launcher_;
+        settings_ = false;
         sel_ = current_;
         return;
     }
@@ -46,23 +49,38 @@ void Shell::update(const Gamepad& pad) {
         apps_[current_]->update(pad, *this);
         return;
     }
-    // Launcher: apps, then "theme", "font" and "quit". Theme and font cycle
-    // in place (A or left/right) so the change previews behind the menu.
-    const int n = (int)apps_.size() + 3, themeItem = n - 3, fontItem = n - 2, quitItem = n - 1;
+    if (settings_) {
+        // Settings: each line cycles in place (A or left/right) so the change
+        // previews behind the menu; B returns to the launcher.
+        const int n = 3;
+        if (pad.rep(DUp)) sel_ = (sel_ + n - 1) % n;
+        if (pad.rep(DDown)) sel_ = (sel_ + 1) % n;
+        if (pad.hit(kBack)) {
+            settings_ = false;
+            sel_ = (int)apps_.size();  // back on "settings"
+            return;
+        }
+        int step = (pad.hit(kConfirm) || pad.rep(DRight)) ? 1 : pad.rep(DLeft) ? -1 : 0;
+        if (!step) return;
+        if (sel_ == 0) skins::selectTheme(skins::themeIndex() + step);
+        if (sel_ == 1) skins::selectFont(skins::fontIndex() + step);
+        if (sel_ == 2) skins::setStarfield(!skins::starfield());
+        return;
+    }
+    // Launcher: apps, then "settings" and "quit".
+    const int n = (int)apps_.size() + 2, settingsItem = n - 2, quitItem = n - 1;
     if (pad.rep(DUp)) sel_ = (sel_ + n - 1) % n;
     if (pad.rep(DDown)) sel_ = (sel_ + 1) % n;
     if (pad.hit(kBack)) launcher_ = false;
-    if (sel_ == themeItem || sel_ == fontItem) {
-        int step = (pad.hit(kConfirm) || pad.rep(DRight)) ? 1 : pad.rep(DLeft) ? -1 : 0;
-        if (step && sel_ == themeItem) skins::selectTheme(skins::themeIndex() + step);
-        if (step && sel_ == fontItem) skins::selectFont(skins::fontIndex() + step);
+    if (!pad.hit(kConfirm)) return;
+    if (sel_ == settingsItem) {
+        settings_ = true;
+        sel_ = 0;
         return;
     }
-    if (pad.hit(kConfirm)) {
-        launcher_ = false;
-        if (sel_ == quitItem) quit();
-        else switchTo(sel_);
-    }
+    launcher_ = false;
+    if (sel_ == quitItem) quit();
+    else switchTo(sel_);
 }
 
 void Shell::render(Gfx& g) {
@@ -81,6 +99,6 @@ void Shell::render(Gfx& g) {
 
     Rect area = skin.frame(g, v);
     if (!apps_.empty()) apps_[current_]->render(g, area);
-    if (launcher_) skin.menu(g, "apps", launcherItems(), sel_);
+    if (launcher_) skin.menu(g, settings_ ? "settings" : "apps", launcherItems(), sel_);
     skin.finish(g);
 }

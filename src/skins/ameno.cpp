@@ -20,16 +20,14 @@ constexpr int kM = 64;         // side margin
 constexpr int kTopY = 42;      // top bar text row; mirrors the badges row's distance from the bottom
 constexpr int kStatusY = 640;  // badges row; timer below it, just inside the TV-safe bottom margin
 
-// Optional animated background drawn behind everything.
-enum class Backdrop { None, Starfield };
-struct Theme { const char* name; const Palette& palette; Backdrop backdrop = Backdrop::None; };
+struct Theme { const char* name; const Palette& palette; };
 const Theme kThemes[] = {
     {"sunset", themes::sunset}, {"dusk", themes::dusk},         {"lava", themes::lava},
     {"gold", themes::gold},     {"tropic", themes::tropic},     {"rose", themes::rose},
     {"ember", themes::ember},   {"midnight", themes::midnight}, {"moon", themes::moon},     {"ocean", themes::ocean},
     {"carbon", themes::carbon}, {"neon", themes::neon},         {"cyber", themes::cyber},
     {"vapor", themes::vapor},   {"ice", themes::ice},           {"night", themes::night},
-    {"starfield", themes::starfield, Backdrop::Starfield}, {"day", themes::day},
+    {"space", themes::space},       {"day", themes::day},
 };
 struct FontPair { const char* id; const char* name; const char* regular; const char* bold; };
 const FontPair kFonts[] = {
@@ -45,6 +43,7 @@ constexpr int kFontCount = sizeof kFonts / sizeof *kFonts;
 
 // Current choices (defaults: sunset, Space Mono) and where they are saved.
 int g_theme = 0, g_font = 0;
+bool g_starfield = false;  // moving starfield behind any theme
 std::string g_settingsPath;
 
 class Ameno : public Skin {
@@ -54,7 +53,7 @@ public:
     Rect frame(Gfx& g, const ShellView& v) override {
         sync();
         g.clear(P.bg);
-        if (kThemes[g_theme].backdrop == Backdrop::Starfield) starfield(g);
+        if (g_starfield) starfield(g, P.light);
         Font& brand = g.font(P.bold, 30);
         int x = kM + g.draw(brand, kM, kTopY, "padshell", ink(P.letters, P));
         g.draw(g.font(P.mono, 30), x + 16, kTopY, v.heading, P.muted);
@@ -377,7 +376,7 @@ private:
     // Stateless: each star's depth is a function of the clock, wrapping back
     // to the far plane, so it needs no per-frame state. Kept small and dim so
     // the text stays the brightest thing on screen.
-    static void starfield(Gfx& g) {
+    static void starfield(Gfx& g, bool light) {
         constexpr int kStars = 260;
         constexpr float kCycle = 20.0f;  // seconds for a star to travel from far to near
         const float t = SDL_GetTicks() / 1000.0f;
@@ -402,8 +401,9 @@ private:
             const float nearness = (1.0f - z) / 0.95f;  // 0 far .. 1 near
             const int size = nearness > 0.6f ? 3 : nearness > 0.3f ? 2 : 1;
             const uint8_t a = (uint8_t)(90 + 140 * nearness);
-            const Color c = tint < 0.7f ? Color{225, 232, 255, a} : tint < 0.85f ? Color{170, 215, 255, a}
-                                                                                 : Color{255, 230, 200, a};
+            Color c = tint < 0.7f ? Color{225, 232, 255, a} : tint < 0.85f ? Color{170, 215, 255, a}
+                                                                           : Color{255, 230, 200, a};
+            if (light) c = {60, 64, 80, (uint8_t)(a * 0.7f)};  // dark specks on pale themes
             // Near stars leave a short fading trail back towards the centre.
             if (nearness > 0.45f) {
                 for (int k = 1; k <= 3; ++k) {
@@ -434,7 +434,8 @@ int wrap(int i, int n) { return ((i % n) + n) % n; }
 void save() {
     if (g_settingsPath.empty()) return;
     if (FILE* f = std::fopen(g_settingsPath.c_str(), "w")) {
-        std::fprintf(f, "theme=%s\nfont=%s\n", kThemes[g_theme].name, kFonts[g_font].id);
+        std::fprintf(f, "theme=%s\nfont=%s\nstarfield=%s\n", kThemes[g_theme].name, kFonts[g_font].id,
+                     g_starfield ? "on" : "off");
         std::fclose(f);
     }
 }
@@ -466,6 +467,8 @@ int fontCount() { return kFontCount; }
 int fontIndex() { return g_font; }
 std::string fontName(int i) { return kFonts[wrap(i, kFontCount)].name; }
 void selectFont(int i) { g_font = wrap(i, kFontCount); save(); }
+bool starfield() { return g_starfield; }
+void setStarfield(bool on) { g_starfield = on; save(); }
 
 void loadSettings(const std::string& path) {
     g_settingsPath = path;
@@ -476,7 +479,14 @@ void loadSettings(const std::string& path) {
     while (std::fgets(line, sizeof line, f)) {
         line[std::strcspn(line, "\r\n")] = 0;
         if (std::strncmp(line, "theme=", 6) == 0) {
-            if (int i = findTheme(line + 6); i >= 0) g_theme = i;
+            if (std::strcmp(line + 6, "starfield") == 0) {  // older: the starfield was a theme
+                g_theme = findTheme("space");
+                g_starfield = true;
+            } else if (int i = findTheme(line + 6); i >= 0) {
+                g_theme = i;
+            }
+        } else if (std::strncmp(line, "starfield=", 10) == 0) {
+            g_starfield = std::strcmp(line + 10, "on") == 0;
         } else if (std::strncmp(line, "font=", 5) == 0) {
             if (int i = findFont(line + 5); i >= 0) { g_font = i; fontSet = true; }
         } else if (std::strncmp(line, "style=", 6) == 0) {

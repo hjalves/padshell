@@ -20,12 +20,17 @@ character is being selected it appears at the cursor in its button's colour,
 the status line shows its cycle, and a bar counts down to the commit. Tags on
 the right show caps and the current mode.
 
-## Themes and fonts
+## Settings: theme, font and starfield
 
-The colour theme and the font are chosen independently in the − app menu:
-highlight *theme* or *font* and press A, or D-pad left/right, to cycle while
-the menu stays open as a preview. Both are saved in `settings.ini` next to
-the notes (`theme=sunset`, `font=space-mono`).
+Press − and choose *settings*. It has three lines: the colour **theme**, the
+**font**, and the moving **starfield** (on/off), each independent of the
+others. Highlight one and press A, or D-pad left/right, to change it while
+the menu stays open as a preview; B goes back. They are saved in
+`settings.ini` next to the notes (`theme=sunset`, `font=space-mono`,
+`starfield=on`).
+
+The starfield draws stars drifting slowly towards you behind the text,
+with any theme (on the light *day* theme they are dark specks).
 
 ![Themes](docs/styles.png)
 
@@ -47,7 +52,7 @@ the notes (`theme=sunset`, `font=space-mono`).
 | **vapor** | Violet-black, hot pink accent, softer neons |
 | **ice** | Blue-black, electric periwinkle accent with cyan and mint |
 | **night** | Dim, for dark rooms: everything held at 4.8–8:1 contrast, warm white text, soft amber accent |
-| **starfield** | Deep space: stars drifting slowly towards you behind the text, white text, pale blue accent |
+| **space** | Black, white text, pale blue accent and cool colours; made for the starfield |
 | **day** | Light paper, darkened ink colours for text |
 
 Fonts: **Space Mono** (default), JetBrains Mono, IBM Plex Mono, Fira Mono,
