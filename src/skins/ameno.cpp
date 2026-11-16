@@ -1,9 +1,7 @@
 // Ameno: an adaptation of the "ameno" TV web app's editor. A slim top bar
-// (brand, counts, a small controller diagram, clock), a large document with
+// (brand, counts, clock), a large document with
 // characters coloured by kind, and a status line of flat button badges with
 // their groups, the pending character's cycle, mode tags and a commit timer.
-#include <tuple>
-
 #include "family.h"
 
 namespace {
@@ -31,7 +29,6 @@ public:
             Font& t = g.font(kMono, 15);
             g.draw(t, Gfx::W - kM - Gfx::measure(t, v.toast), kTopY + 44, v.toast, P.caps);
         }
-        diagram(g, Gfx::W - 227 - 187, kTopY - 10, v.pad ? v.pad->held : 0);
         return {kM, kTopY + 44, Gfx::W - 2 * kM, Gfx::H - (kTopY + 44)};
     }
 
@@ -90,32 +87,6 @@ private:
         if (float t = timerLeft(v); t > 0)
             g.fill({kM, kStatusY + 44, (int)((Gfx::W - 2 * kM) * t), 4}, buttonColor(pendingButton(v)));
     }
-
-    // A small controller diagram; held buttons light up in their colour.
-    void diagram(Gfx& g, int x, int y, uint32_t held) {
-        auto box = [&](Btn b, int bx, int by, int w, int h, Color on) {
-            g.fill({x + bx, y + by, w, h}, (held & b) ? on : P.raised);
-        };
-        Font& lf = g.font(kBold, 9);
-        auto label = [&](Btn b, int bx, int by, int w, int h, Color c) {
-            g.drawCentered(lf, x + bx + w / 2, y + by + (h - lf.lineH()) / 2, btnLabel(b), (held & b) ? P.dark : c);
-        };
-        box(ZL, 9, 0, 37, 12, buttonColor(South)); label(ZL, 9, 0, 37, 12, P.muted);
-        box(ZR, 140, 0, 37, 12, buttonColor(East)); label(ZR, 140, 0, 37, 12, P.muted);
-        box(L, 0, 16, 56, 9, P.caps);
-        box(R, 131, 16, 56, 9, P.text);
-        for (auto [b, bx, by] : {std::tuple{DUp, 28, 32}, {DDown, 28, 63}, {DLeft, 13, 47}, {DRight, 43, 47}})
-            box(b, bx, by, 15, 15, buttonColor(b));
-        g.fill({x + 28, y + 47, 15, 15}, P.raised);
-        box(Minus, 75, 51, 15, 8, P.letters);
-        box(Plus, 97, 51, 15, 8, P.letters);
-        for (auto [b, bx, by] : {std::tuple{North, 151, 39}, {West, 134, 55}, {East, 168, 55}, {South, 151, 71}}) {
-            Color c = buttonColor(b);
-            g.fillCircle(x + bx + 8, y + by + 3, 8, (held & b) ? c : P.raised);
-            g.drawCentered(lf, x + bx + 8, y + by + 3 - lf.lineH() / 2, btnLabel(b), (held & b) ? P.dark : c);
-        }
-    }
-
 };
 }  // namespace
 

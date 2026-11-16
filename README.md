@@ -29,7 +29,7 @@ notes.
 | Style | Look |
 |---|---|
 | **metro** (default) | Black canvas, big light heading, flat colour tiles in controller order with per-mode palettes, TV-safe margins. |
-| **ameno** | After the ameno TV web app: slim top bar (brand, counts, small controller diagram, clock), large document, and a status line of flat button badges with their groups, the pending character's cycle, mode tags and a commit timer. |
+| **ameno** | After the ameno TV web app: slim top bar (brand, counts, clock), large document, and a status line of flat button badges with their groups, the pending character's cycle, mode tags and a commit timer. |
 | **light** | A daytime light theme: metro's tile strip where every tile keeps its button's own colour in all modes; the mode shows in the cursor and tags, and a bar on the pending tile counts down to the commit. |
 | **focus** | Distraction-free: a quiet top line and a large centred column of text. The status line stays muted while you write and comes up in colour when you act; the commit timer sits under the pending character. |
 
