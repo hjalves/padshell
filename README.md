@@ -45,6 +45,7 @@ the notes (`theme=sunset`, `font=space-mono`).
 | **cyber** | Pure black, electric cyan accent with yellow and magenta |
 | **vapor** | Violet-black, hot pink accent, softer neons |
 | **ice** | Blue-black, electric periwinkle accent with cyan and mint |
+| **night** | Dim, for dark rooms: everything held at 4.8–8:1 contrast, warm white text, soft amber accent |
 | **day** | Light paper, darkened ink colours for text |
 
 Fonts: **Space Mono** (default), JetBrains Mono, IBM Plex Mono, Fira Mono,

@@ -24,7 +24,8 @@ const Theme kThemes[] = {
     {"gold", themes::gold},     {"tropic", themes::tropic},     {"rose", themes::rose},
     {"ember", themes::ember},   {"midnight", themes::midnight}, {"moon", themes::moon},     {"grayscale", themes::grayscale}, {"ocean", themes::ocean},
     {"carbon", themes::carbon}, {"neon", themes::neon},         {"cyber", themes::cyber},
-    {"vapor", themes::vapor},   {"ice", themes::ice},           {"day", themes::day},
+    {"vapor", themes::vapor},   {"ice", themes::ice},           {"night", themes::night},
+    {"day", themes::day},
 };
 struct FontPair { const char* id; const char* name; const char* regular; const char* bold; };
 const FontPair kFonts[] = {
