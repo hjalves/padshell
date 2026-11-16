@@ -42,6 +42,8 @@ with any theme (on the light *day* theme they are dark specks).
 | **gold** | Black, amber accent; the caps tag is cyan to stand apart |
 | **tropic** | Teal-black, orange accent |
 | **rose** | Pink-black, rose accent |
+| **ruby** | Red-black, ruby accent; edit mode is magenta to stay distinct |
+| **emerald** | Green-black, emerald accent; symbol mode is cyan to stay distinct |
 | **ember** | Warm dark brown, coral and amber |
 | **midnight** | Violet-black, pink accent |
 | **moon** | Pure black with a white accent, pure white text and saturated cool colours |
