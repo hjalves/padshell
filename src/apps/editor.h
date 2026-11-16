@@ -6,9 +6,10 @@
 #include "../multitap.h"
 #include "../textbuffer.h"
 
-// Single-file, append-only text editor driven by multi-tap input. Text is
-// always added at the end of the document; Plus opens the editor menu (save,
-// quit). The document is saved automatically when the editor is left.
+// Single-file text editor driven by multi-tap input. Text goes in at the
+// cursor, which starts at the end and moves with ZR + D-pad; Plus opens the
+// editor menu (save, quit). The document is saved automatically when the
+// editor is left.
 class EditorApp : public App {
 public:
     explicit EditorApp(std::string path);

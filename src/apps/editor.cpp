@@ -43,12 +43,15 @@ void EditorApp::onLeave() {
 
 void EditorApp::apply(const std::vector<TextEvent>& events) {
     for (const TextEvent& e : events) {
-        buf_.moveToEnd();  // append-only
         switch (e.kind) {
             case TextEvent::Insert: buf_.insert(e.text); break;
             case TextEvent::Newline: buf_.newline(); break;
             case TextEvent::Backspace: buf_.backspace(); break;
-            case TextEvent::DeleteLine: buf_.deleteLastLine(); break;
+            case TextEvent::DeleteLine: buf_.deleteCurrentLine(); break;
+            case TextEvent::Left: buf_.left(); break;
+            case TextEvent::Right: buf_.right(); break;
+            case TextEvent::Up: buf_.up(); break;
+            case TextEvent::Down: buf_.down(); break;
         }
     }
 }
@@ -89,6 +92,8 @@ void EditorApp::render(Gfx& g, Rect area) {
     v.modified = buf_.modified();
     v.tap = &tap_;
     v.held = held_;
+    v.cursorLine = buf_.line();
+    v.cursorCol = (int)buf_.column();
     Skin& skin = skins::current();
     skin.editor(g, area, v);
     if (menu_) skin.menu(g, "editor", kMenuItems, menuSel_);

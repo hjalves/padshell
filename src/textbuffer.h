@@ -17,6 +17,10 @@ public:
     // Removes the last newline-separated segment: "a\nb" -> "a", "a\n" -> "a",
     // "a" -> "". Leaves the cursor at the end.
     void deleteLastLine();
+    // Removes the line the cursor is on, with its line break. On the last line
+    // this is deleteLastLine(); otherwise the cursor moves to the start of
+    // the line that takes its place.
+    void deleteCurrentLine();
 
     void left();
     void right();

@@ -15,23 +15,26 @@ size_t EditorView::chars() const {
     return n - 1;
 }
 
-int EditorView::endColumn() const { return (int)utf8::length(lines->back()); }
-
-std::vector<WrapRow> EditorView::wrap(int cols) const {
-    const int last = (int)lines->size() - 1;
-    std::vector<WrapRow> rows;
-    for (int i = 0; i <= last; ++i) {
-        const std::string& s = (*lines)[i];
-        int len = (int)utf8::length(s);
-        int n = i == last ? len / cols + 1 : std::max(1, (len + cols - 1) / cols);
-        for (int k = 0; k < n; ++k)
-            rows.push_back({i, utf8::offset(s, (size_t)k * cols), utf8::offset(s, (size_t)(k + 1) * cols), k == 0});
+EditorView::Layout EditorView::layout(int cols) const {
+    Layout L;
+    L.lines = *lines;
+    if (tap->hasPending()) {
+        std::string& l = L.lines[cursorLine];
+        l.insert(utf8::offset(l, cursorCol), tap->pendingText());
     }
-    return rows;
-}
-
-std::string_view EditorView::rowText(const WrapRow& r) const {
-    return std::string_view((*lines)[r.line]).substr(r.from, r.to - r.from);
+    for (int i = 0; i < (int)L.lines.size(); ++i) {
+        const int len = (int)utf8::length(L.lines[i]);
+        int n = std::max(1, (len + cols - 1) / cols);
+        if (i == cursorLine) {
+            n = std::max(n, cursorCol / cols + 1);
+            L.cursorRow = (int)L.rows.size() + cursorCol / cols;
+            L.cursorX = cursorCol % cols;
+        }
+        const std::string& s = L.lines[i];
+        for (int k = 0; k < n; ++k)
+            L.rows.push_back({i, utf8::offset(s, (size_t)k * cols), utf8::offset(s, (size_t)(k + 1) * cols), k == 0});
+    }
+    return L;
 }
 
 namespace skins {

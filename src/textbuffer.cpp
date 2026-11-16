@@ -69,6 +69,17 @@ void TextBuffer::deleteLastLine() {
     moveToEnd();
 }
 
+void TextBuffer::deleteCurrentLine() {
+    if (line_ == (int)lines_.size() - 1) {
+        deleteLastLine();
+        return;
+    }
+    lines_.erase(lines_.begin() + line_);
+    col_ = 0;
+    goalColumn_ = -1;
+    modified_ = true;
+}
+
 void TextBuffer::moveToEnd() {
     line_ = (int)lines_.size() - 1;
     col_ = lines_[line_].size();

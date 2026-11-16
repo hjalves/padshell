@@ -6,7 +6,8 @@
 //   * The pending character is committed after 1 s without input, or when a
 //     character from another group is selected.
 //   * Hold ZL (left trigger) for numbers and symbols; hold ZR (right trigger)
-//     for newline / space / backspace / delete-line. ZR wins over ZL.
+//     for newline / space / backspace / delete-line on the face buttons and
+//     cursor movement on the D-pad (auto-repeats). ZR wins over ZL.
 //   * L (left shoulder) toggles uppercase for the next committed character.
 //
 // The logic is pure (time comes from Gamepad::ms) so it can be unit tested.
@@ -18,7 +19,7 @@
 #include "pad.h"
 
 struct TextEvent {
-    enum Kind { Insert, Newline, Backspace, DeleteLine };
+    enum Kind { Insert, Newline, Backspace, DeleteLine, Left, Right, Up, Down };
     Kind kind;
     std::string text;  // for Insert
 };

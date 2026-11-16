@@ -5,6 +5,7 @@
 #include <string>
 
 #include "../src/multitap.h"
+#include "../src/skin.h"
 #include "../src/pad.h"
 #include "../src/textbuffer.h"
 #include "../src/utf8.h"
@@ -98,6 +99,10 @@ struct Sim {
                 case TextEvent::Newline: out += "\n"; break;
                 case TextEvent::Backspace: out += "<BS>"; break;
                 case TextEvent::DeleteLine: out += "<DL>"; break;
+                case TextEvent::Left: out += "<L>"; break;
+                case TextEvent::Right: out += "<R>"; break;
+                case TextEvent::Up: out += "<U>"; break;
+                case TextEvent::Down: out += "<D>"; break;
             }
         }
     }
@@ -203,11 +208,11 @@ static void testMultiTap() {
         s.press(West);   // space
         s.press(East);   // backspace
         s.press(North);  // delete line
-        s.press(DUp);    // nothing
-        CHECK(s.out == "a\n <BS><DL>");
+        s.press(DUp);    // D-pad moves the cursor while ZR is held
+        CHECK(s.out == "a\n <BS><DL><U>");
         s.hold(ZL);      // both triggers: commands win
         s.press(South);
-        CHECK(s.out == "a\n <BS><DL>\n");
+        CHECK(s.out == "a\n <BS><DL><U>\n");
     }
 }
 
@@ -229,11 +234,89 @@ static void testDeleteLastLine() {
     CHECK(b.text().empty() && !b.modified());
 }
 
+static void testCursorMoves() {
+    {   // ZR + D-pad commits the pending character, then moves.
+        Sim s;
+        s.press(South);
+        s.hold(ZR);
+        s.press(DLeft);
+        s.press(DRight);
+        s.press(DDown);
+        CHECK(s.out == "a<L><R><D>");
+    }
+    {   // Holding a direction auto-repeats.
+        Sim s;
+        s.hold(ZR);
+        s.hold(DLeft);
+        s.wait(500);  // past the repeat delay
+        s.wait(50);
+        s.release(DLeft);
+        int moves = 0;
+        for (size_t i = s.out.find("<L>"); i != std::string::npos; i = s.out.find("<L>", i + 1)) ++moves;
+        CHECK(moves >= 2);
+    }
+    {   // Without ZR the D-pad still types.
+        Sim s;
+        s.press(DLeft);
+        CHECK(s.tap.pendingText() == "p" && s.out.empty());
+    }
+}
+
+static void testEditingAtCursor() {
+    TextBuffer b;
+    b.setText("hello world");
+    b.end();               // cursor at the end of line 1
+    for (int i = 0; i < 6; ++i) b.left();
+    b.insert(",");
+    CHECK(b.text() == "hello, world");
+    b.backspace();
+    CHECK(b.text() == "hello world");
+    b.newline();
+    CHECK(b.text() == "hello\n world" && b.line() == 1 && b.column() == 0);
+
+    // Deleting a middle line keeps the others; on the last line it matches
+    // the spec's delete-last-segment.
+    b.setText("one\ntwo\nthree");
+    b.down();              // line 2
+    b.deleteCurrentLine();
+    CHECK(b.text() == "one\nthree" && b.line() == 1 && b.column() == 0);
+    b.deleteCurrentLine(); // last line
+    CHECK(b.text() == "one" && b.line() == 0 && b.column() == 3);
+    b.deleteCurrentLine(); // single line: cleared
+    CHECK(b.text().empty());
+}
+
+static void testLayout() {
+    TextBuffer b;
+    b.setText("abcdef\ngh");
+    MultiTap tap;
+    EditorView v;
+    v.lines = &b.lines();
+    v.tap = &tap;
+
+    v.cursorLine = 0; v.cursorCol = 2;
+    auto L = v.layout(4);  // "abcd" "ef" "gh"
+    CHECK(L.rows.size() == 3 && L.cursorRow == 0 && L.cursorX == 2);
+    CHECK(L.rowText(L.rows[1]) == "ef");
+
+    v.cursorCol = 4;       // wraps onto the second row
+    L = v.layout(4);
+    CHECK(L.cursorRow == 1 && L.cursorX == 0);
+
+    b.setText("abcd");     // cursor at the end of a full row gets its own row
+    v.cursorLine = 0; v.cursorCol = 4;
+    L = v.layout(4);
+    CHECK(L.rows.size() == 2 && L.cursorRow == 1 && L.cursorX == 0);
+}
+
 int main() {
     testBuffer();
     testTracker();
     testMultiTap();
     testDeleteLastLine();
+    testCursorMoves();
+    testEditingAtCursor();
+    testLayout();
     if (g_failed) {
         std::printf("%d check(s) failed\n", g_failed);
         return 1;

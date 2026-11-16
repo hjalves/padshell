@@ -23,18 +23,26 @@ struct EditorView {
     const std::vector<std::string>* lines = nullptr;
     bool modified = false;
     const MultiTap* tap = nullptr;
-    uint32_t held = 0;  // buttons currently down
+    uint32_t held = 0;                  // buttons currently down
+    int cursorLine = 0, cursorCol = 0;  // cursor position (codepoint column)
 
     MultiTap::Mode mode() const { return tap->mode(); }
     bool empty() const { return lines->size() == 1 && (*lines)[0].empty(); }
     int lineCount() const { return (int)lines->size(); }
     size_t chars() const;
-    // Codepoint column of the end of the document (where the cursor sits).
-    int endColumn() const;
-    // Visual rows of at most `cols` codepoints. The last line always gets room
-    // for the cursor cell (where the pending character is previewed).
-    std::vector<WrapRow> wrap(int cols) const;
-    std::string_view rowText(const WrapRow& r) const;
+
+    // The document as displayed: the pending character (if any) inserted at
+    // the cursor, wrapped into rows of at most `cols` codepoints, and where
+    // the cursor cell lands. The cursor's line always has room for its cell.
+    struct Layout {
+        std::vector<std::string> lines;
+        std::vector<WrapRow> rows;
+        int cursorRow = 0, cursorX = 0;
+        std::string_view rowText(const WrapRow& r) const {
+            return std::string_view(lines[r.line]).substr(r.from, r.to - r.from);
+        }
+    };
+    Layout layout(int cols) const;
 };
 
 class Skin {

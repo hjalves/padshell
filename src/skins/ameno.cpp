@@ -64,13 +64,14 @@ public:
     void editor(Gfx& g, Rect a, const EditorView& v) override {
         sync();
         Font& meta = g.font(P.mono, 17);
-        g.draw(meta, kM, kTopY + 44, std::to_string(v.lineCount()) + (v.lineCount() == 1 ? " line" : " lines") +
-                                         " \xC2\xB7 " + std::to_string(v.chars()) + " chars" +
-                                         (v.modified ? " \xC2\xB7 unsaved" : ""),
+        g.draw(meta, kM, kTopY + 44,
+               "ln " + std::to_string(v.cursorLine + 1) + ", col " + std::to_string(v.cursorCol + 1) +
+                   " \xC2\xB7 " + std::to_string(v.lineCount()) + (v.lineCount() == 1 ? " line" : " lines") +
+                   " \xC2\xB7 " + std::to_string(v.chars()) + " chars" + (v.modified ? " \xC2\xB7 unsaved" : ""),
                P.muted);
 
         Font& f = g.font(P.mono, 38);
-        document(g, {kM, kTopY + 97, a.w, 8 * 54}, v, P, {&f, 54, 6});
+        document(g, {kM, kTopY + 97, a.w, 8 * 54}, v, P, {&f, 54, 6}, top_);
 
         status(g, v);
     }
@@ -131,6 +132,7 @@ private:
     }
 
     Palette P = themes::sunset;
+    int top_ = 0;  // first visible document row
 };
 
 int wrap(int i, int n) { return ((i % n) + n) % n; }

@@ -217,33 +217,41 @@ struct DocStyle {
     bool colourChars = true;
 };
 
-// Wrapped document following the end, with coloured characters, an underline
-// cursor in the mode colour, and the pending character in its button colour.
-inline void document(Gfx& g, Rect r, const EditorView& v, const Palette& p, const DocStyle& s) {
+// Wrapped document with coloured characters, scrolled so the cursor stays
+// visible (`top` is the first visible row, kept between frames), an
+// underline cursor in the mode colour, and the pending character inserted at
+// the cursor in its button colour.
+inline void document(Gfx& g, Rect r, const EditorView& v, const Palette& p, const DocStyle& s, int& top) {
     Font& f = *s.font;
     const int cols = std::max(1, r.w / f.cellW()), visible = std::max(1, r.h / s.lineH);
-    const auto rows = v.wrap(cols);
-    const int top = std::max(0, (int)rows.size() - visible);
+    const EditorView::Layout L = v.layout(cols);
+    const int rows = (int)L.rows.size();
+    if (L.cursorRow < top) top = L.cursorRow;
+    if (L.cursorRow >= top + visible) top = L.cursorRow - visible + 1;
+    top = std::clamp(top, 0, std::max(0, rows - visible));  // no blank space after deletions
+
     const int dy = (s.lineH - f.lineH()) / 2;
-    for (int i = top; i < (int)rows.size() && i < top + visible; ++i) {
-        std::string_view t = v.rowText(rows[i]);
-        int x = r.x, y = r.y + (i - top) * s.lineH + dy;
-        for (size_t k = 0; k < t.size(); k = utf8::next(t, k)) {
+    const bool pending = v.tap->hasPending();
+    for (int i = top; i < rows && i < top + visible; ++i) {
+        std::string_view t = L.rowText(L.rows[i]);
+        int x = r.x, y = r.y + (i - top) * s.lineH;
+        int col = 0;
+        for (size_t k = 0; k < t.size(); k = utf8::next(t, k), ++col, x += f.cellW()) {
             uint32_t cp = utf8::decode(t, k);
-            g.print(f, x, y, t.substr(k, utf8::next(t, k) - k), s.colourChars ? charColor(cp, p) : p.text);
-            x += f.cellW();
+            std::string_view ch = t.substr(k, utf8::next(t, k) - k);
+            if (pending && i == L.cursorRow && col == L.cursorX) {
+                g.fill({x, y, f.cellW(), s.lineH}, p.surface);
+                g.print(f, x, y + dy, ch, ink(buttonColor(pendingButton(v), p), p));
+            } else {
+                g.print(f, x, y + dy, ch, s.colourChars ? charColor(cp, p) : p.text);
+            }
         }
     }
-    const int cx = r.x + (v.endColumn() % cols) * f.cellW();
-    const int cy = r.y + ((int)rows.size() - 1 - top) * s.lineH;
-    const Color mc = modeColor(v.mode(), p);
-    if (v.tap->hasPending()) {
-        g.fill({cx, cy, f.cellW(), s.lineH}, p.surface);
-        g.print(f, cx, cy + dy, v.tap->pendingText(), ink(buttonColor(pendingButton(v), p), p));
-        g.fill({cx, cy + s.lineH - s.cursorH, f.cellW(), s.cursorH}, mc);
-    } else if (blinkOn()) {
-        g.fill({cx, cy + s.lineH - s.cursorH, f.cellW(), s.cursorH}, mc);
-    }
+    const int cx = r.x + L.cursorX * f.cellW();
+    const int cy = r.y + (L.cursorRow - top) * s.lineH;
+    // Solid while a character is pending or ZR (navigation) is held; blinks otherwise.
+    if (pending || v.mode() == MultiTap::Mode::Commands || blinkOn())
+        g.fill({cx, cy + s.lineH - s.cursorH, f.cellW(), s.cursorH}, modeColor(v.mode(), p));
 }
 
 // The pending character's cycle as cells: current one filled with the button
@@ -283,6 +291,14 @@ inline int groupsLine(Gfx& g, int x, int y, int size, Font& f, const EditorView&
         badge(g, x, y, size, b, held ? p.text : bc, held ? p.bg : p.dark, p.bold);
         x += size + size / 4;
         x += g.draw(f, x, y + (size - f.lineH()) / 2, label, ink(bc, p)) + size * 2 / 3;
+    }
+    if (commands) {  // the D-pad moves the cursor
+        for (Btn b : {DLeft, DUp, DDown, DRight}) {
+            const bool held = v.held & b;
+            badge(g, x, y, size, b, held ? p.text : buttonColor(b, p), held ? p.bg : p.dark, p.bold);
+            x += size + size / 8;
+        }
+        x += size / 8 + g.draw(f, x + size / 8, y + (size - f.lineH()) / 2, "move cursor", p.text);
     }
     return x - x0;
 }

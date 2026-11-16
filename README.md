@@ -79,7 +79,7 @@ LT/RT/LB are ZL/ZR/L.)
 |---|---|
 | B / A / Y / X, D-pad | character groups |
 | ZL (hold) | numbers and symbols (green cursor) |
-| ZR (hold) | newline, space, backspace, delete line (red cursor) |
+| ZR (hold) | newline, space, backspace, delete line; D-pad moves the cursor (red cursor) |
 | L | toggle uppercase |
 | + | editor menu (save, quit). In menus: A select, B cancel, D-pad up/down move |
 | − | app menu |
@@ -113,12 +113,17 @@ committed character. If L is held while characters are committed, it stays on
 while held, and after release it stays on until the next commit (or another
 press of L).
 
-**Commands (hold ZR):** B newline, Y space, A backspace, X delete the last
-line (`first\nsecond` → `first`, `first\n` → `first`, a single line is
-cleared). Pressing ZR, or any command, commits the pending character first.
-ZR takes precedence when both triggers are held.
+**Commands (hold ZR):** B newline, Y space, A backspace, X delete the
+current line, and the D-pad moves the cursor (it auto-repeats while held).
+Deleting on the last line is the spec's "delete the last segment"
+(`first\nsecond` → `first`, `first\n` → `first`, a single line is
+cleared); on another line it removes that line. Pressing ZR, or any
+command, commits the pending character first. ZR takes precedence when both
+triggers are held.
 
-Text is always added at the end of the document. The editor works on
+Text goes in at the cursor, which starts at the end of the document when it
+is opened; the view scrolls to keep it visible and the top bar shows its
+line and column. The editor works on
 `sdmc:/switch/padshell/notes.txt` on the Switch, or
 `~/.local/share/padshell/notes.txt` on desktop (override with
 `PADSHELL_DATA`). It saves automatically when you quit.

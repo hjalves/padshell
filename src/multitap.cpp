@@ -2,6 +2,7 @@
 
 #include <cctype>
 #include <cstring>
+#include <utility>
 
 // Buttons are named by position. In Xbox terms South = A, West = X, North = Y,
 // East = B; on a Switch controller South = B, West = Y, North = X, East = A.
@@ -85,6 +86,14 @@ void MultiTap::update(const Gamepad& pad, std::vector<TextEvent>& out) {
             if (!pad.hit(c.button)) continue;
             commit(out, shoulder);
             out.push_back({c.kind, c.text});
+        }
+        // Cursor movement on the D-pad, with key repeat while held.
+        static const std::pair<Btn, TextEvent::Kind> moves[] = {
+            {DLeft, TextEvent::Left}, {DRight, TextEvent::Right}, {DUp, TextEvent::Up}, {DDown, TextEvent::Down}};
+        for (auto [b, kind] : moves) {
+            if (!pad.rep(b)) continue;
+            commit(out, shoulder);
+            out.push_back({kind, {}});
         }
         return;
     }
