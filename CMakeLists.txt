@@ -25,10 +25,7 @@ add_executable(padshell
   src/shell.cpp
   src/textbuffer.cpp
   src/skin.cpp
-  src/skins/metro.cpp
   src/skins/ameno.cpp
-  src/skins/light.cpp
-  src/skins/focus.cpp
   src/apps/editor.cpp
 )
 target_compile_options(padshell PRIVATE -Wall -Wextra)

@@ -11,62 +11,61 @@ copying to the console.
 
 ## Screen
 
-The editor shows the document with a cursor at the end. While a character is
-being selected it appears at the cursor and its group shows the cycle. Every
-style also shows the eight button groups (or, while a trigger is held, the
-symbol groups or edit commands), lights up the buttons being pressed, and
-indicates the current mode.
+After the [ameno](https://github.com/hjalves/ameno-textpad) TV web app: a slim
+top bar (brand, counts, clock), a large document with characters coloured by
+kind, and a status line of flat button badges with their groups. While a
+character is being selected it appears at the cursor in its button's colour,
+the status line shows its cycle, and a bar counts down to the commit. Tags on
+the right show caps and the current mode.
 
-## Styles
+## Themes
 
-Variations on one Metro-style design, picked in the − app menu:
-highlight *style* and press A, or D-pad left/right, to cycle while the menu
-stays open as a preview. The choice is saved in `settings.ini` next to the
-notes.
+One layout, many themes (a palette plus a monospaced font pair), picked in
+the − app menu: highlight *style* and press A, or D-pad left/right, to cycle
+while the menu stays open as a preview. The choice is saved in
+`settings.ini` next to the notes.
 
-![All styles](docs/styles.png)
+![Themes](docs/styles.png)
 
-| Style | Look |
-|---|---|
-| **metro** | Black canvas, big light heading, flat colour tiles in controller order with per-mode palettes, TV-safe margins. |
-| **ameno** | After the ameno TV web app: slim top bar (brand, counts, clock), large document, and a status line of flat button badges with their groups, the pending character's cycle, mode tags and a commit timer. Midnight palette, DejaVu Sans Mono. |
-| **ameno-ocean** | ameno in deep navy with a cyan accent, JetBrains Mono. |
-| **ameno-carbon** | ameno in neutral near-black with IBM blue (Carbon-like colours), IBM Plex Mono. |
-| **ameno-neon** | ameno on pure black with electric magenta, lime and cyan, Fira Mono. |
-| **ameno-neon-space** | neon's palette with Space Mono. |
-| **ameno-cyber** | Pure black, electric cyan accent with yellow and magenta, Space Mono. |
-| **ameno-vapor** | Violet-black, hot pink accent, softer vaporwave neons, Space Mono. |
-| **ameno-sunset** (default) | Pure black, hot orange accent with magenta and lime, Space Mono. |
-| **ameno-dusk** | Violet-black with a violet accent, like a dusk sky, Space Mono. |
-| **ameno-lava** | Warm black, red-orange accent; edit mode is crimson-pink to stay distinct, Space Mono. |
-| **ameno-gold** | Black with an amber accent; the caps tag is cyan to stand apart, Space Mono. |
-| **ameno-tropic** | Teal-black with an orange accent, Space Mono. |
-| **ameno-rose** | Pink-black with a rose accent, Space Mono. |
-| **ameno-ice** | Blue-black, electric periwinkle accent with cyan and mint, Space Mono. |
-| **ameno-ember** | ameno in warm dark brown with coral and amber, Space Mono. |
-| **ameno-day** | ameno as a light paper theme with darkened ink colours for text, Courier Prime. |
-| **light** | A daytime light theme: metro's tile strip where every tile keeps its button's own colour in all modes; the mode shows in the cursor and tags, and a bar on the pending tile counts down to the commit. |
-| **focus** | Distraction-free: a quiet top line and a large centred column of text. The status line stays muted while you write and comes up in colour when you act; the commit timer sits under the pending character. |
+| Theme | Look | Font |
+|---|---|---|
+| **ameno-sunset** (default) | Pure black, hot orange accent with magenta and lime | Space Mono |
+| **ameno-dusk** | Violet-black, violet accent | Space Mono |
+| **ameno-lava** | Warm black, red-orange accent; edit mode is crimson-pink to stay distinct | Space Mono |
+| **ameno-gold** | Black, amber accent; the caps tag is cyan to stand apart | Space Mono |
+| **ameno-tropic** | Teal-black, orange accent | Space Mono |
+| **ameno-rose** | Pink-black, rose accent | Space Mono |
+| **ameno-ember** | Warm dark brown, coral and amber | Space Mono |
+| **ameno** | Midnight: violet-black, pink accent | DejaVu Sans Mono |
+| **ameno-ocean** | Deep navy, cyan accent | JetBrains Mono |
+| **ameno-carbon** | Neutral black, IBM blue | IBM Plex Mono |
+| **ameno-neon** | Pure black, electric magenta, lime and cyan | Fira Mono |
+| **ameno-neon-space** | neon's palette | Space Mono |
+| **ameno-cyber** | Pure black, electric cyan accent with yellow and magenta | Space Mono |
+| **ameno-vapor** | Violet-black, hot pink accent, softer neons | Space Mono |
+| **ameno-ice** | Blue-black, electric periwinkle accent with cyan and mint | Space Mono |
+| **ameno-day** | Light paper, darkened ink colours for text | Courier Prime |
 
-All but metro share the ameno conventions (`src/skins/family.h`):
+Conventions shared by every theme (`src/skins/family.h`):
 
-* **Vivid palettes.** Each theme (`themes::` in `family.h`) is a palette
-  plus a monospaced font pair. Dark themes use near-black backgrounds,
-  saturated accents (at least 4.9:1 against the background and for dark
-  text on them) and greys at 6.8:1 or better, so they hold up on cheap TV
-  panels. In ameno themes the letters cursor/mode colour is the theme's accent.
+* **Contrast for TVs.** Dark themes use near-black backgrounds, saturated
+  accents (at least 4.9:1 against the background, and for dark text on
+  them) and greys at 6.8:1 or better, so they hold up on cheap panels.
 * **Button colours.** Each button position has its own colour wherever it
   appears: bottom green, right red, left blue, top yellow (Xbox A, B, X, Y;
   on a Switch controller B, A, Y, X), D-pad down orange, left violet, up
-  teal, right magenta.
-* **Character colours.** In the document, capitals are teal, digits yellow,
-  brackets magenta, quotes green, operators blue, other punctuation violet.
-* **Mode colours.** Cursor and mode tag: pink for letters, green while ZL is
-  held, red while ZR is held. The "ABC" tag lights up in yellow for caps.
+  teal, right magenta. Exact shades vary by theme.
+* **Character colours.** In the document, capitals, digits, brackets,
+  quotes, operators and other punctuation each have their own colour.
+* **Mode colours.** Cursor and mode tag use the theme's accent for letters,
+  green while ZL is held and red while ZR is held. The "ABC" tag lights up
+  for caps.
 
-Each skin is one file in `src/skins/`. Skins receive a read-only view of the
-shell and editor state (`src/skin.h`) and draw everything themselves, so a
-new look needs no changes to the editor or input code.
+The layout is `src/skins/ameno.cpp`; a theme is a `Palette` in
+`themes::` (`family.h`) registered with one line at the bottom of
+`ameno.cpp` and in `skin.cpp`. Skins receive a read-only view of the shell
+and editor state (`src/skin.h`), so a new layout needs no changes to the
+editor or input code.
 
 ## Controls
 
@@ -180,13 +179,13 @@ src/
   gfx.*             drawing helpers, cached monospace glyphs
   shell.*           app launcher and app switching (drawing is done by skins)
   skin.*            skin interface, registry and shared helpers
-  skins/            one file per visual style
+  skins/            the ameno layout (ameno.cpp) and its themes (family.h)
   app.h             interface every app implements
   apps/editor.*     the text editor
 tests/              host-only unit tests
-romfs/              bundled fonts: DejaVu, plus JetBrains Mono, IBM Plex Mono,
-                    Fira Mono, Space Mono and Courier Prime under the SIL OFL
-                    (licences alongside)
+romfs/              bundled fonts: DejaVu Sans Mono, plus JetBrains Mono,
+                    IBM Plex Mono, Fira Mono, Space Mono and Courier Prime
+                    under the SIL OFL (licences alongside)
 tools/              build script, xdotool typing helper for desktop testing
 ```
 

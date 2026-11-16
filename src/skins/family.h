@@ -1,4 +1,4 @@
-// Building blocks shared by the Metro-family skins, after the "ameno" web
+// Building blocks for the ameno skins, after the "ameno" web
 // app's design: each button has its own colour, used everywhere it appears
 // (badges, labels, the pending character, the cycle), document characters
 // are coloured by kind, and a shrinking bar shows when the pending character
@@ -145,14 +145,7 @@ inline const Palette rose{{10, 0, 4}, {36, 8, 20}, {70, 18, 40}, {215, 165, 185}
     {{255, 140, 180}, {255, 215, 0}, {255, 90, 200}, {110, 255, 70}, {50, 180, 255}, {210, 130, 255}}, false,
     "SpaceMono-Regular.ttf", "SpaceMono-Bold.ttf"};
 
-// Used by the "light" (tile) skin.
-inline const Palette daylight{{246, 245, 241}, {232, 230, 224}, {214, 211, 204}, {139, 135, 153}, {27, 26, 34}, {27, 26, 34},
-    {224, 53, 138}, {31, 174, 96}, {224, 52, 69}, {214, 160, 0},
-    {{31, 174, 96}, {224, 52, 69}, {29, 155, 209}, {214, 160, 0}, {232, 128, 0}, {124, 77, 255}, {15, 170, 145}, {214, 58, 176}},
-    {{15, 150, 128}, {190, 140, 0}, {200, 50, 165}, {31, 160, 90}, {29, 140, 200}, {124, 77, 255}}, true};
 }  // namespace themes
-
-inline const Palette& darkPalette() { return themes::midnight; }
 
 inline int buttonIndex(Btn b) {
     switch (b) {
@@ -292,9 +285,8 @@ inline int cycle(Gfx& g, int x, int y, int cell, const EditorView& v, const Pale
 }
 
 // Badges with their group (or command) in the button colour, in spec order.
-// `quiet` draws everything in the muted colour. Returns the width used.
-inline int groupsLine(Gfx& g, int x, int y, int size, Font& f, const EditorView& v, const Palette& p,
-                      bool quiet = false) {
+// Returns the width used.
+inline int groupsLine(Gfx& g, int x, int y, int size, Font& f, const EditorView& v, const Palette& p) {
     const int x0 = x;
     const bool commands = v.mode() == MultiTap::Mode::Commands;
     for (int i = 0; i < 8; ++i) {
@@ -306,11 +298,11 @@ inline int groupsLine(Gfx& g, int x, int y, int size, Font& f, const EditorView&
         } else {
             label = groupText(*v.tap, groupFor(v.mode(), b)->chars);
         }
-        const Color bc = quiet ? p.raised : buttonColor(b, p);
+        const Color bc = buttonColor(b, p);
         const bool held = v.held & b;
-        badge(g, x, y, size, b, held ? p.text : bc, quiet ? p.muted : held ? p.bg : p.dark, p.bold);
+        badge(g, x, y, size, b, held ? p.text : bc, held ? p.bg : p.dark, p.bold);
         x += size + size / 4;
-        x += g.draw(f, x, y + (size - f.lineH()) / 2, label, quiet ? p.muted : ink(bc, p)) + size * 2 / 3;
+        x += g.draw(f, x, y + (size - f.lineH()) / 2, label, ink(bc, p)) + size * 2 / 3;
     }
     return x - x0;
 }
@@ -327,43 +319,4 @@ inline int modeTags(Gfx& g, int right, int y, int h, Font& f, const EditorView& 
     return right - x;
 }
 
-constexpr int kMarginX = 64, kMarginY = 36;  // TV-safe area at 1280x720
-
-// Metro header: small caps brand, large light heading, clock. Returns the
-// area below it.
-inline Rect metroHeader(Gfx& g, const ShellView& v, const Palette& p) {
-    g.clear(p.bg);
-    g.draw(g.font("DejaVuSans.ttf", 17), kMarginX, kMarginY, "PADSHELL", p.letters);
-    g.draw(g.font("DejaVuSans-ExtraLight.ttf", 60), kMarginX - 4, kMarginY + 14, v.heading, p.text);
-    Font& c = g.font("DejaVuSans-ExtraLight.ttf", 44);
-    g.draw(c, Gfx::W - kMarginX - Gfx::measure(c, v.clock), kMarginY + 8, v.clock, p.text);
-    if (!v.toast.empty()) {
-        Font& t = g.font("DejaVuSans.ttf", 20);
-        g.draw(t, Gfx::W - kMarginX - Gfx::measure(t, v.toast), kMarginY + 62, v.toast, p.caps);
-    }
-    return {kMarginX, kMarginY + 104, Gfx::W - 2 * kMarginX, Gfx::H - (kMarginY + 104) - kMarginY};
-}
-
-// Full-screen Metro list; the selection is a filled bar (ameno style).
-inline void metroMenu(Gfx& g, const Palette& p, const std::string& title, const std::vector<std::string>& items,
-                      int sel) {
-    g.fill({0, 0, Gfx::W, Gfx::H}, withAlpha(p.bg, 248));
-    std::string t = title;
-    for (char& c : t) c = (char)std::toupper((unsigned char)c);
-    g.draw(g.font("DejaVuSans.ttf", 22), kMarginX, kMarginY + 64, t, p.muted);
-    Font& f = g.font("DejaVuSans-ExtraLight.ttf", 44);
-    int y = kMarginY + 116;
-    for (int i = 0; i < (int)items.size(); ++i) {
-        const bool on = i == sel;
-        if (on) g.fill({kMarginX, y, 560, f.lineH() + 10}, p.letters);
-        g.draw(f, kMarginX + 24, y + 5, items[i], on ? p.dark : p.text);
-        y += f.lineH() + 22;
-    }
-    Font& h = g.font("DejaVuSans.ttf", 20);
-    int x = kMarginX, hy = Gfx::H - kMarginY - 30;
-    for (auto [b, what] : {std::pair{kConfirm, "select"}, std::pair{kBack, "cancel"}}) {
-        badge(g, x, hy, 30, b, buttonColor(b, p), p.dark, p.bold);
-        x += 30 + 10 + g.draw(h, x + 40, hy + (30 - h.lineH()) / 2, what, p.muted) + 30;
-    }
-}
 }  // namespace fam

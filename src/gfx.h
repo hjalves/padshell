@@ -60,16 +60,6 @@ public:
     // Falls back to DejaVu Sans Mono if the file can't be opened.
     Font& font(const std::string& file, int px, bool solid = false);
 
-    // Fonts used by the Classic and Metro skins.
-    Font& text() { return font("DejaVuSansMono.ttf", 24); }
-    Font& small() { return font("DejaVuSansMono.ttf", 18); }
-    Font& monoTV() { return font("DejaVuSansMono.ttf", 34); }
-    Font& monoTile() { return font("DejaVuSansMono.ttf", 30); }
-    Font& light() { return font("DejaVuSans-ExtraLight.ttf", 60); }
-    Font& lightMid() { return font("DejaVuSans-ExtraLight.ttf", 44); }
-    Font& sans() { return font("DejaVuSans.ttf", 22); }
-    Font& sansSmall() { return font("DejaVuSans.ttf", 17); }
-
     void clear(Color c);
     void fill(Rect rc, Color c);
     void outline(Rect rc, Color c, int thickness = 1);

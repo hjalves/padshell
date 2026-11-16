@@ -14,7 +14,6 @@ struct ShellView {
     std::string title;    // longer app title, e.g. "Editor - notes.txt *"
     std::string clock;    // "HH:MM"
     std::string toast;    // transient message, empty if none
-    std::vector<std::string> help;
     const Gamepad* pad = nullptr;  // last input, for controller diagrams
 };
 

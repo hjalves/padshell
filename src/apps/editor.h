@@ -18,7 +18,6 @@ public:
     void onLeave() override;
     void update(const Gamepad& pad, Shell& shell) override;
     void render(Gfx& g, Rect area) override;
-    std::vector<std::string> help() const override;
 
 private:
     void apply(const std::vector<TextEvent>& events);

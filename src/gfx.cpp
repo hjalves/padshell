@@ -79,7 +79,7 @@ bool Gfx::init(SDL_Renderer* r, const std::string& fontDir) {
     r_ = r;
     fontDir_ = fontDir;
     SDL_SetRenderDrawBlendMode(r_, SDL_BLENDMODE_BLEND);
-    return text().ttf() != nullptr;  // the fallback font must exist
+    return font("DejaVuSansMono.ttf", 24).ttf() != nullptr;  // the fallback font must exist
 }
 
 void Gfx::shutdown() { fonts_.clear(); }

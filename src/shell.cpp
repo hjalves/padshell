@@ -68,7 +68,6 @@ void Shell::render(Gfx& g) {
     if (!apps_.empty()) {
         v.heading = apps_[current_]->heading();
         v.title = apps_[current_]->title();
-        v.help = apps_[current_]->help();
     }
     char clock[16];
     std::time_t now = std::time(nullptr);

@@ -22,15 +22,6 @@ std::string EditorApp::heading() const {
     return name.substr(0, name.find_last_of('.'));
 }
 
-std::vector<std::string> EditorApp::help() const {
-    return {
-        std::string(btnLabel(ZL)) + " hold: numbers & symbols",
-        std::string(btnLabel(ZR)) + " hold: newline, space, delete",
-        std::string(btnLabel(L)) + ": uppercase",
-        "+: editor menu    -: apps",
-    };
-}
-
 void EditorApp::flush() {
     std::vector<TextEvent> ev;
     tap_.flush(ev);

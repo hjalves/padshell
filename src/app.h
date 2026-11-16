@@ -20,6 +20,4 @@ public:
     virtual void update(const Gamepad& pad, Shell& shell) = 0;
     // Draw into `area`, normally by handing a view of the app to the skin.
     virtual void render(Gfx& g, Rect area) = 0;
-    // Short hints some skins show next to the controller.
-    virtual std::vector<std::string> help() const { return {}; }
 };

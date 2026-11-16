@@ -37,7 +37,6 @@ std::string_view EditorView::rowText(const WrapRow& r) const {
 // --- registry -----------------------------------------------------------------
 
 // Defined in src/skins/*.cpp.
-Skin* makeMetro();
 Skin* makeAmeno();
 Skin* makeAmenoOcean();
 Skin* makeAmenoCarbon();
@@ -54,8 +53,6 @@ Skin* makeAmenoTropic();
 Skin* makeAmenoRose();
 Skin* makeAmenoEmber();
 Skin* makeAmenoDay();
-Skin* makeLight();
-Skin* makeFocus();
 
 namespace skins {
 namespace {
@@ -72,10 +69,10 @@ int indexOf(const char* name) {
 
 const std::vector<Skin*>& all() {
     static const std::vector<Skin*> list = {
-        makeMetro(),       makeAmeno(),      makeAmenoOcean(),     makeAmenoCarbon(), makeAmenoNeon(),
-        makeAmenoNeonSpace(), makeAmenoCyber(), makeAmenoVapor(),  makeAmenoSunset(), makeAmenoDusk(),
-        makeAmenoLava(),   makeAmenoGold(),  makeAmenoTropic(),    makeAmenoRose(),   makeAmenoIce(),
-        makeAmenoEmber(),  makeAmenoDay(),   makeLight(),          makeFocus()};
+        makeAmenoSunset(), makeAmenoDusk(),   makeAmenoLava(),   makeAmenoGold(),       makeAmenoTropic(),
+        makeAmenoRose(),   makeAmenoEmber(),  makeAmeno(),       makeAmenoOcean(),      makeAmenoCarbon(),
+        makeAmenoNeon(),   makeAmenoNeonSpace(), makeAmenoCyber(), makeAmenoVapor(),    makeAmenoIce(),
+        makeAmenoDay()};
     return list;
 }
 
