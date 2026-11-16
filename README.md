@@ -14,12 +14,11 @@ copying to the console.
 
 ## Screen
 
-After ameno, the author's TV web-app editor of the same design: a slim
-top bar (brand, counts, clock), a large document with characters coloured by
-kind, and a status line of flat button badges with their groups. While a
-character is being selected it appears at the cursor in its button's colour,
-the status line shows its cycle, and a bar counts down to the commit. Tags on
-the right show caps and the current mode.
+A slim top bar (brand, counts, clock), a large document with characters
+coloured by kind, and a status line of flat button badges with their groups.
+While a character is being selected it appears at the cursor in its button's
+colour, the status line shows its cycle, and a bar counts down to the
+commit. Tags on the right show caps and the current mode.
 
 ## Settings: theme, font and starfield
 
@@ -44,7 +43,7 @@ with any theme (on the light *day* theme they are dark specks).
 | **tropic** | Teal-black, orange accent |
 | **rose** | Pink-black, rose accent |
 | **ember** | Warm dark brown, coral and amber |
-| **midnight** | Violet-black, pink accent (the original ameno colours) |
+| **midnight** | Violet-black, pink accent |
 | **moon** | Pure black with a white accent, pure white text and saturated cool colours |
 | **ocean** | Deep navy, cyan accent |
 | **carbon** | Neutral black, IBM blue |
@@ -74,8 +73,8 @@ Conventions shared by every theme (`src/skins/family.h`):
   green while ZL is held and red while ZR is held. The "ABC" tag lights up
   for caps.
 
-The layout is `src/skins/ameno.cpp`; a theme is a `Palette` in
-`themes::` (`family.h`) listed in `kThemes` in `ameno.cpp`, and a font is a
+The layout is `src/skins/layout.cpp`; a theme is a `Palette` in
+`themes::` (`family.h`) listed in `kThemes` in `layout.cpp`, and a font is a
 Regular/Bold pair listed in `kFonts` there. Skins receive a read-only view of the shell
 and editor state (`src/skin.h`), so a new layout needs no changes to the
 editor or input code.
@@ -237,7 +236,7 @@ src/
   gfx.*             drawing helpers, cached monospace glyphs
   shell.*           app launcher and app switching (drawing is done by skins)
   skin.*            skin interface, registry and shared helpers
-  skins/            the ameno layout (ameno.cpp) and its themes (family.h)
+  skins/            the layout (layout.cpp) and its themes (family.h)
   app.h             interface every app implements
   apps/editor.*     the text editor
   apps/browser.*    the Gemini browser

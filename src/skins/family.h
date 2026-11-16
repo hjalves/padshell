@@ -1,8 +1,7 @@
-// Building blocks for the ameno skins, after the "ameno" web
-// app's design: each button has its own colour, used everywhere it appears
-// (badges, labels, the pending character, the cycle), document characters
-// are coloured by kind, and a shrinking bar shows when the pending character
-// will be committed.
+// Building blocks for the layout: each button has its own colour, used
+// everywhere it appears (badges, labels, the pending character, the cycle),
+// document characters are coloured by kind, and a shrinking bar shows when
+// the pending character will be committed.
 #pragma once
 #include <SDL.h>
 

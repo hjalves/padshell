@@ -1,12 +1,11 @@
-// Ameno: an adaptation of the "ameno" TV web app's editor. A slim top bar
-// (brand, counts, clock), a large document with characters coloured by kind,
-// and a status line of flat button badges with their groups, the pending
-// character's cycle, mode tags and a commit timer.
+// The layout: a slim top bar (brand, counts, clock), a large document with
+// characters coloured by kind, and a status line of flat button badges with
+// their groups, the pending character's cycle, mode tags and a commit timer;
+// plus the Gemini page view.
 //
-// It is the only layout. The colour theme and the font are chosen
-// independently (app menu, saved in settings.ini); both tables and the
-// settings live at the bottom of this file.
-#include <cmath>
+// It is the only layout. The colour theme, the font and the starfield are
+// chosen independently (app menu > settings, saved in settings.ini); the
+// tables and the settings live at the bottom of this file.
 #include <cstdio>
 #include <cstring>
 
@@ -46,9 +45,9 @@ int g_theme = 0, g_font = 0;
 bool g_starfield = false;  // moving starfield behind any theme
 std::string g_settingsPath;
 
-class Ameno : public Skin {
+class Layout : public Skin {
 public:
-    const char* name() const override { return "ameno"; }
+    const char* name() const override { return "layout"; }
 
     Rect frame(Gfx& g, const ShellView& v) override {
         sync();
@@ -455,7 +454,7 @@ int findFont(const char* id) {
 
 namespace skins {
 Skin& current() {
-    static Ameno s;
+    static Layout s;
     return s;
 }
 
@@ -475,7 +474,6 @@ void loadSettings(const std::string& path) {
     FILE* f = std::fopen(path.c_str(), "r");
     if (!f) return;  // first run: defaults
     char line[128];
-    bool fontSet = false;
     while (std::fgets(line, sizeof line, f)) {
         line[std::strcspn(line, "\r\n")] = 0;
         if (std::strncmp(line, "theme=", 6) == 0) {
@@ -488,18 +486,7 @@ void loadSettings(const std::string& path) {
         } else if (std::strncmp(line, "starfield=", 10) == 0) {
             g_starfield = std::strcmp(line + 10, "on") == 0;
         } else if (std::strncmp(line, "font=", 5) == 0) {
-            if (int i = findFont(line + 5); i >= 0) { g_font = i; fontSet = true; }
-        } else if (std::strncmp(line, "style=", 6) == 0) {
-            // Older versions saved one "style" per theme+font, e.g.
-            // "ameno-sunset"; "ameno" alone was the midnight theme.
-            std::string s = line + 6;
-            if (s.rfind("ameno-", 0) == 0) s = s.substr(6);
-            if (s == "ameno") s = "midnight";
-            if (s == "neon-space") {
-                s = "neon";
-                if (!fontSet) g_font = findFont("space-mono");
-            }
-            if (int i = findTheme(s.c_str()); i >= 0) g_theme = i;
+            if (int i = findFont(line + 5); i >= 0) g_font = i;
         }
     }
     std::fclose(f);

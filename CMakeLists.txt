@@ -28,7 +28,7 @@ add_executable(padshell
   src/gemini/gemtext.cpp
   src/gemini/client.cpp
   src/skin.cpp
-  src/skins/ameno.cpp
+  src/skins/layout.cpp
   src/apps/editor.cpp
   src/apps/browser.cpp
 )
