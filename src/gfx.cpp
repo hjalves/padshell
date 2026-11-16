@@ -39,8 +39,10 @@ SDL_Surface* Font::render(const char* s) {
 
 SDL_Texture* Font::glyph(uint32_t cp, int* w, int* h) {
     if (cp > ' ' && !TTF_GlyphIsProvided32(font_, cp))
-        for (Font* f : fallbacks_)
-            if (TTF_GlyphIsProvided32(f->font_, cp)) return f->glyph(cp, w, h);
+        for (Fallback& fb : fallbacks_) {
+            if (!fb.font) fb.font = &fb.gfx->font(fb.file, fb.px, fb.solid);
+            if (fb.font->font_ && TTF_GlyphIsProvided32(fb.font->font_, cp)) return fb.font->glyph(cp, w, h);
+        }
     auto it = glyphs_.find(cp);
     if (it == glyphs_.end()) {
         Tex t{nullptr, 0, 0};
@@ -96,8 +98,8 @@ Font& Gfx::font(const std::string& file, int px, bool solid) {
     Font& font = *fonts_.emplace(key, std::move(f)).first->second;  // map nodes are stable
     // Fallback chain for missing characters (box drawing, emoji...).
     if (file != "NotoEmoji.ttf") {
-        if (file != "DejaVuSansMono.ttf") font.addFallback(&this->font("DejaVuSansMono.ttf", px, solid));
-        font.addFallback(&this->font("NotoEmoji.ttf", px, solid));
+        if (file != "DejaVuSansMono.ttf") font.addFallback(this, "DejaVuSansMono.ttf", px, solid);
+        font.addFallback(this, "NotoEmoji.ttf", px, solid);
     }
     return font;
 }

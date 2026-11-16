@@ -10,6 +10,7 @@
 
 #ifdef __SWITCH__
 #include <dirent.h>
+#include <malloc.h>
 #include <switch.h>
 #include <unistd.h>
 
@@ -86,6 +87,23 @@ void init() {
 void closeControllers() {
     for (auto* c : g_pads) SDL_GameControllerClose(c);
     g_pads.clear();
+}
+
+void logMemory() {
+#ifdef __SWITCH__
+    static uint64_t next = 0;
+    if (g_nxlinkSock < 0) return;
+    const uint64_t now = armTicksToNs(armGetSystemTick()) / 1000000;
+    if (now < next) return;
+    next = now + 5000;
+    uint64_t used = 0, total = 0;
+    svcGetInfo(&used, InfoType_UsedMemorySize, CUR_PROCESS_HANDLE, 0);
+    svcGetInfo(&total, InfoType_TotalMemorySize, CUR_PROCESS_HANDLE, 0);
+    struct mallinfo mi = mallinfo();
+    std::printf("memory: process %.1f / %.1f MB, malloc heap %.1f MB in use\n", used / 1048576.0, total / 1048576.0,
+                mi.uordblks / 1048576.0);
+    std::fflush(stdout);
+#endif
 }
 
 void shutdown() {

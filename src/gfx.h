@@ -12,6 +12,8 @@
 #include <unordered_map>
 #include <vector>
 
+class Gfx;
+
 struct Color { uint8_t r, g, b, a = 255; };
 struct Rect { int x, y, w, h; };
 
@@ -36,7 +38,11 @@ public:
     // Glyph from this font, or from the first fallback that has it.
     SDL_Texture* glyph(uint32_t cp, int* w, int* h);
     SDL_Texture* string(std::string_view s, int* w, int* h);
-    void addFallback(Font* f) { fallbacks_.push_back(f); }
+    // A font to try for characters this one lacks. Opened lazily, the first
+    // time such a character is drawn (most screens never need it).
+    void addFallback(Gfx* g, std::string file, int px, bool solid) {
+        fallbacks_.push_back({g, std::move(file), px, solid, nullptr});
+    }
 
 private:
     struct Tex { SDL_Texture* tex; int w, h; };
@@ -47,7 +53,14 @@ private:
     int cellW_ = 0, lineH_ = 0;
     std::unordered_map<uint32_t, Tex> glyphs_;
     std::unordered_map<std::string, Tex> strings_;
-    std::vector<Font*> fallbacks_;
+    struct Fallback {
+        Gfx* gfx;
+        std::string file;
+        int px;
+        bool solid;
+        Font* font;  // null until first needed
+    };
+    std::vector<Fallback> fallbacks_;
 };
 
 enum class Dir { Up, Down, Left, Right };

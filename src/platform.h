@@ -12,6 +12,9 @@ namespace platform {
 void init();              // nxlink stdio on Switch (romfs/sockets: userAppInit); hints on desktop
 void closeControllers();  // must run before SDL_Quit()
 void shutdown();          // after SDL_Quit() (Switch teardown is in userAppExit)
+// Debug aid: on the Switch, when launched with `nxlink -s`, logs memory use
+// every few seconds. Call once per frame; does nothing otherwise.
+void logMemory();
 
 std::string assetPath(const std::string& rel);  // read-only bundled files
 std::string dataDir();                          // writable, created on demand

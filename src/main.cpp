@@ -70,6 +70,7 @@ int main(int, char**) {
         }
 
         shell.render(gfx);
+        platform::logMemory();
         SDL_RenderPresent(ren);
     }
 
