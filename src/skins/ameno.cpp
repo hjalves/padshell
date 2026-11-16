@@ -22,7 +22,7 @@ struct Theme { const char* name; const Palette& palette; };
 const Theme kThemes[] = {
     {"sunset", themes::sunset}, {"dusk", themes::dusk},         {"lava", themes::lava},
     {"gold", themes::gold},     {"tropic", themes::tropic},     {"rose", themes::rose},
-    {"ember", themes::ember},   {"midnight", themes::midnight}, {"moon", themes::moon},     {"grayscale", themes::grayscale}, {"ocean", themes::ocean},
+    {"ember", themes::ember},   {"midnight", themes::midnight}, {"moon", themes::moon},     {"ocean", themes::ocean},
     {"carbon", themes::carbon}, {"neon", themes::neon},         {"cyber", themes::cyber},
     {"vapor", themes::vapor},   {"ice", themes::ice},           {"night", themes::night},
     {"day", themes::day},

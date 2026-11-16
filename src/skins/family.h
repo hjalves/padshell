@@ -133,14 +133,6 @@ inline const Palette moon{{0, 0, 0}, {22, 22, 24}, {46, 46, 50}, {185, 187, 194}
     {{40, 240, 135}, {255, 75, 100}, {60, 175, 255}, {255, 232, 50}, {255, 145, 30}, {165, 130, 255}, {30, 235, 225}, {255, 85, 225}},
     {{110, 225, 255}, {255, 232, 50}, {255, 85, 225}, {40, 240, 135}, {60, 175, 255}, {175, 145, 255}}, false};
 
-// Monochrome: near-black with white and grey accents. Buttons, modes and
-// character kinds differ by shade only (badges carry their labels and the
-// mode tag names the mode).
-inline const Palette grayscale{{6, 6, 9}, {28, 28, 34}, {54, 54, 62}, {150, 150, 160}, {225, 225, 232}, {6, 6, 9},
-    {255, 255, 255}, {205, 205, 214}, {160, 160, 170}, {255, 255, 255},
-    {{235, 235, 240}, {200, 200, 208}, {215, 215, 222}, {250, 250, 255}, {190, 190, 198}, {205, 205, 212}, {225, 225, 232}, {180, 180, 188}},
-    {{255, 255, 255}, {210, 210, 218}, {175, 175, 185}, {195, 195, 205}, {165, 165, 175}, {150, 150, 160}}, false};
-
 // Dim, for dark rooms: pure black and everything held in a narrow
 // 4.8-8:1 contrast band (other themes reach 20:1), warm white text and a
 // soft amber accent. Colours keep their hues at reduced brightness.
