@@ -46,9 +46,12 @@ void init() {
 #endif
 }
 
-void shutdown() {
+void closeControllers() {
     for (auto* c : g_pads) SDL_GameControllerClose(c);
     g_pads.clear();
+}
+
+void shutdown() {
 #ifdef __SWITCH__
     if (g_nxlinkSock >= 0) close(g_nxlinkSock);
     socketExit();

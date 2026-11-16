@@ -57,10 +57,24 @@ int main(int, char**) {
         platform::samplePad(held, lx, ly, rx, ry);
         shell.update(tracker.update(held, lx, ly, rx, ry, SDL_GetTicks()));
 
+        // Log the real framebuffer size when it changes (e.g. docking).
+        static int lastW = 0, lastH = 0;
+        int ow = 0, oh = 0;
+        SDL_GetRendererOutputSize(ren, &ow, &oh);
+        if (ow != lastW || oh != lastH) {
+            SDL_Log("render output %dx%d (drawing in %dx%d)", ow, oh, Gfx::W, Gfx::H);
+            lastW = ow;
+            lastH = oh;
+        }
+
         shell.render(gfx);
         SDL_RenderPresent(ren);
     }
 
+    // Teardown order matters: everything SDL owns is released before
+    // SDL_Quit(); closing controllers after it is a use-after-free that can
+    // crash the app on exit.
+    platform::closeControllers();
     gfx.shutdown();
     SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
