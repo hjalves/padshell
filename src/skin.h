@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "gemini/gemtext.h"
 #include "gfx.h"
 #include "multitap.h"
 #include "pad.h"
@@ -45,6 +46,30 @@ struct EditorView {
     Layout layout(int cols) const;
 };
 
+// Written by the skin while drawing a page, read back by the browser on the
+// next frame to scroll and move between links.
+struct BrowserLayout {
+    int rows = 0;     // visual rows in the page
+    int visible = 1;  // rows that fit on screen
+    std::vector<std::pair<int, int>> links;  // first and last row of each link
+};
+
+struct BrowserView {
+    std::string url;
+    std::string status;  // e.g. "20 text/gemini", "loading..."
+    bool loading = false;
+    const std::vector<gem::Line>* lines = nullptr;
+    int selected = -1;   // link index
+    float scroll = 0;    // first visible row (fractional for smooth scrolling)
+    uint32_t held = 0;
+    // Address bar or a Gemini input prompt (status 10/11).
+    bool input = false;
+    std::string prompt;
+    bool sensitive = false;
+    EditorView field;
+    BrowserLayout* layout = nullptr;  // filled in by the skin
+};
+
 class Skin {
 public:
     virtual ~Skin() = default;
@@ -52,6 +77,7 @@ public:
     // Background and shell chrome. Returns the area the app may draw in.
     virtual Rect frame(Gfx& g, const ShellView& v) = 0;
     virtual void editor(Gfx& g, Rect area, const EditorView& v) = 0;
+    virtual void browser(Gfx&, Rect, const BrowserView&) {}
     // A modal list (app launcher, editor menu), drawn over everything.
     virtual void menu(Gfx& g, const std::string& title, const std::vector<std::string>& items, int sel) = 0;
     // Called last each frame (post-processing, upscaling...).

@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include "../utf8.h"
 #include "family.h"
 
 namespace {
@@ -59,7 +60,8 @@ public:
         g.draw(g.font(P.mono, 30), x + 16, kTopY, v.heading, P.muted);
         Font& clock = g.font(P.mono, 30);
         g.draw(clock, Gfx::W - kM - Gfx::measure(clock, v.clock), kTopY, v.clock, P.text);
-        if (!v.toast.empty()) {
+        toast_ = !v.toast.empty();
+        if (toast_) {
             Font& t = g.font(P.mono, 15);
             g.draw(t, Gfx::W - kM - Gfx::measure(t, v.toast), kTopY + 44, v.toast, ink(P.caps, P));
         }
@@ -110,7 +112,249 @@ public:
         tag(g, sf, Gfx::W - kM - 70, y0, s, "menu", P.text, P.bg);
     }
 
+    // --- Gemini browser ------------------------------------------------------
+
+    void browser(Gfx& g, Rect a, const BrowserView& v) override {
+        sync();
+        // URL and response status under the top bar.
+        Font& meta = g.font(P.mono, 17);
+        const int metaY = kTopY + 44;
+        int sw = Gfx::measure(meta, v.status);
+        if (!toast_)  // a toast from the shell takes this spot while it shows
+            g.draw(meta, Gfx::W - kM - sw, metaY, v.status, v.loading ? ink(P.caps, P) : P.muted);
+        std::string url = v.url;
+        const int maxUrl = std::max(10, (a.w - sw - 40) / std::max(1, meta.cellW()));
+        if ((int)utf8::length(url) > maxUrl) url = "\xE2\x80\xA6" + url.substr(utf8::offset(url, utf8::length(url) - maxUrl + 1));
+        g.draw(meta, kM, metaY, url, P.muted);
+
+        Rect page{kM, kTopY + 80, a.w, kStatusY - 24 - (kTopY + 80)};
+        if (v.input) {
+            prompt(g, page, v);
+            inputStatus(g, v);
+        } else {
+            pageView(g, page, v);
+            pageStatus(g, v);
+        }
+    }
+
 private:
+    struct PageRow {
+        int line;
+        int link;  // link index or -1
+        gem::Line::Kind kind;
+        bool first;
+        std::string text;
+    };
+
+    // Splits text into rows of at most `cols` cells, breaking at spaces when
+    // possible. Emoji count as two cells.
+    static std::vector<std::string> wrapCells(const std::string& s, int cols) {
+        std::vector<std::string> out;
+        if (s.empty()) return {std::string()};
+        size_t start = 0;
+        while (start < s.size()) {
+            int cells = 0;
+            size_t i = start, lastSpace = std::string::npos;
+            while (i < s.size()) {
+                int w = utf8::width(utf8::decode(s, i));
+                if (cells + w > cols) break;
+                if (s[i] == ' ') lastSpace = i;
+                cells += w;
+                i = utf8::next(s, i);
+            }
+            if (i >= s.size()) {
+                out.push_back(s.substr(start));
+                break;
+            }
+            size_t cut = (lastSpace != std::string::npos && lastSpace > start) ? lastSpace : i;
+            out.push_back(s.substr(start, cut - start));
+            start = cut;
+            while (start < s.size() && s[start] == ' ') ++start;
+        }
+        return out;
+    }
+
+    static std::string clipCells(const std::string& s, int cols) {
+        int cells = 0;
+        size_t i = 0;
+        while (i < s.size()) {
+            int w = utf8::width(utf8::decode(s, i));
+            if (cells + w > cols) break;
+            cells += w;
+            i = utf8::next(s, i);
+        }
+        return s.substr(0, i);
+    }
+
+    static bool external(const std::string& url) {
+        size_t colon = url.find(':');
+        if (colon == std::string::npos || url.find('/') < colon) return false;  // relative
+        std::string scheme = url.substr(0, colon);
+        return scheme != "gemini" && scheme != "about";
+    }
+
+    void pageView(Gfx& g, Rect r, const BrowserView& v) {
+        Font& f = g.font(P.mono, 24);
+        Font& fb = g.font(P.bold, 24);
+        const int lh = f.lineH() + 6;
+        const int cols = std::max(10, (r.w - 16) / f.cellW());
+        const int visible = std::max(1, r.h / lh);
+
+        // Lay out the page into rows.
+        std::vector<PageRow> rows;
+        int link = 0;
+        for (int i = 0; v.lines && i < (int)v.lines->size(); ++i) {
+            const gem::Line& l = (*v.lines)[i];
+            using K = gem::Line::Kind;
+            if (l.kind == K::Pre) {
+                rows.push_back({i, -1, l.kind, true, clipCells(l.text, cols)});
+                continue;
+            }
+            const int indent = (l.kind == K::Link || l.kind == K::Item || l.kind == K::Quote) ? 2 : 0;
+            std::string text = l.text;
+            if (l.kind == K::Link && external(l.url)) text += "  \xE2\x86\x97 " + l.url.substr(0, l.url.find(':'));
+            auto parts = wrapCells(text, cols - indent);
+            for (size_t k = 0; k < parts.size(); ++k)
+                rows.push_back({i, l.kind == K::Link ? link : -1, l.kind, k == 0, parts[k]});
+            if (l.kind == K::Link) ++link;
+        }
+        if (v.layout) {
+            v.layout->rows = (int)rows.size();
+            v.layout->visible = visible;
+            v.layout->links.assign(link, {-1, -1});
+            for (int k = 0; k < (int)rows.size(); ++k)
+                if (rows[k].link >= 0) {
+                    auto& lr = v.layout->links[rows[k].link];
+                    if (lr.first < 0) lr.first = k;
+                    lr.second = k;
+                }
+        }
+
+        // Draw the visible rows, with a sub-row offset for smooth scrolling.
+        const int top = (int)v.scroll;
+        const int offset = (int)((v.scroll - top) * lh);
+        SDL_Rect clip{r.x - 16, r.y, r.w + 32, r.h};
+        SDL_RenderSetClipRect(g.sdl(), &clip);
+        const Color linkColour = ink(buttonColor(West, P), P);
+        for (int k = top; k < (int)rows.size() && k <= top + visible; ++k) {
+            const PageRow& row = rows[k];
+            const int y = r.y + (k - top) * lh - offset;
+            const int ty = y + (lh - f.lineH()) / 2;
+            int x = r.x;
+            using K = gem::Line::Kind;
+            const bool sel = row.link >= 0 && row.link == v.selected;
+            if (sel) {
+                g.fill({r.x - 12, y, r.w + 12, lh}, P.surface);
+                g.fill({r.x - 12, y, 4, lh}, P.letters);
+            }
+            switch (row.kind) {
+                case K::H1: g.printWide(fb, x, ty, row.text, ink(P.letters, P)); break;
+                case K::H2: g.printWide(fb, x, ty, row.text, P.text); break;
+                case K::H3: g.printWide(fb, x, ty, row.text, P.chr[0]); break;
+                case K::Pre: g.printWide(f, x, ty, row.text, mix(P.text, P.muted, 0.35f)); break;
+                case K::Quote:
+                    g.fill({x + f.cellW() / 2 - 1, y, 3, lh}, P.raised);
+                    g.printWide(f, x + 2 * f.cellW(), ty, row.text, P.muted);
+                    break;
+                case K::Item:
+                    if (row.first) g.printWide(f, x, ty, "\xE2\x80\xA2", ink(P.letters, P));
+                    g.printWide(f, x + 2 * f.cellW(), ty, row.text, P.text);
+                    break;
+                case K::Link:
+                    if (row.first) g.printWide(f, x, ty, "\xE2\x86\x92", sel ? P.letters : P.muted);
+                    g.printWide(sel ? fb : f, x + 2 * f.cellW(), ty, row.text, sel ? P.text : linkColour);
+                    break;
+                default: g.printWide(f, x, ty, row.text, P.text); break;
+            }
+        }
+        SDL_RenderSetClipRect(g.sdl(), nullptr);
+
+        // Scrollbar.
+        if ((int)rows.size() > visible) {
+            const int trackX = r.x + r.w + 8, h = r.h;
+            g.fill({trackX, r.y, 3, h}, P.surface);
+            int thumbH = std::max(24, h * visible / (int)rows.size());
+            int thumbY = r.y + (int)((h - thumbH) * (v.scroll / std::max(1, (int)rows.size() - visible)));
+            g.fill({trackX, thumbY, 3, thumbH}, P.muted);
+        }
+        if (v.loading && (!v.lines || v.lines->empty()))
+            g.draw(g.font(P.mono, 24), r.x, r.y, "loading\xE2\x80\xA6", P.muted);
+    }
+
+    void pageStatus(Gfx& g, const BrowserView& v) {
+        const int y = kStatusY, s = 30;
+        Font& f = g.font(P.mono, 20);
+        int x = kM;
+        auto hint = [&](std::initializer_list<Btn> bs, const char* what) {
+            for (Btn b : bs) {
+                const bool held = v.held & b;
+                badge(g, x, y, s, b, held ? P.text : buttonColor(b, P), held ? P.bg : P.dark, P.bold);
+                x += s + 4;
+            }
+            x += 6 + g.draw(f, x + 6, y + (s - f.lineH()) / 2, what, P.text) + 22;
+        };
+        hint({DUp, DDown}, "links");
+        hint({kConfirm}, "open");
+        hint({kBack}, v.loading ? "stop" : "back");
+        hint({West}, "address");
+        hint({North}, "home");
+        Font& tf = g.font(P.bold, 18);
+        tag(g, tf, Gfx::W - kM - Gfx::measure(tf, "+ menu") - 21, y, s, "+ menu", P.surface, P.muted);
+        g.fill({kM, kStatusY + 44, Gfx::W - 2 * kM, 4}, P.surface);
+        if (v.loading) {  // a sweeping bar while waiting for the server
+            const int w = (Gfx::W - 2 * kM) / 4;
+            const int x0 = kM + (int)((SDL_GetTicks() % 1400) / 1400.0f * (Gfx::W - 2 * kM - w));
+            g.fill({x0, kStatusY + 44, w, 4}, P.letters);
+        }
+    }
+
+    void prompt(Gfx& g, Rect r, const BrowserView& v) {
+        Font& pf = g.font(P.mono, 24);
+        int y = r.y;
+        for (const std::string& line : wrapCells(v.prompt, std::max(10, r.w / pf.cellW()))) {
+            g.printWide(pf, r.x, y, line, P.text);
+            y += pf.lineH() + 4;
+        }
+        y += 16;
+        // The field, drawn like the editor's document (masked if sensitive).
+        Font& f = g.font(P.mono, 34);
+        const int lh = f.lineH() + 10;
+        g.fill({r.x - 12, y - 6, r.w + 24, lh + 12}, P.surface);
+        EditorView field = v.field;
+        std::vector<std::string> masked;
+        if (v.sensitive) {
+            for (const auto& l : *field.lines) {
+                std::string m;
+                for (size_t n = utf8::length(l); n > 0; --n) m += "\xE2\x80\xA2";
+                masked.push_back(m);
+            }
+            field.lines = &masked;
+        }
+        int fieldTop = 0;
+        fam::document(g, {r.x, y, r.w, lh}, field, P, {&f, lh, 6}, fieldTop);
+        y += lh + 28;
+        Font& hf = g.font(P.mono, 18);
+        std::string hint = std::string(btnLabel(ZR)) + " + " + btnLabel(South) + "  send      + menu (send, cancel)";
+        g.draw(hf, r.x, y, hint, P.muted);
+    }
+
+    void inputStatus(Gfx& g, const BrowserView& v) {
+        const int y = kStatusY, s = 30;
+        Font& f = g.font(P.mono, 20);
+        const EditorView& e = v.field;
+        if (e.tap->hasPending()) {
+            Btn b = pendingButton(e);
+            badge(g, kM, y - 4, 38, b, buttonColor(b, P), P.dark, P.bold);
+            cycle(g, kM + 38 + 12, y - 4, 38, e, P);
+        } else {
+            groupsLine(g, kM, y, s, f, e, P);
+        }
+        modeTags(g, Gfx::W - kM, y, s, g.font(P.bold, 18), e, P);
+        g.fill({kM, kStatusY + 44, Gfx::W - 2 * kM, 4}, P.surface);
+        if (float t = timerLeft(e); t > 0)
+            g.fill({kM, kStatusY + 44, (int)((Gfx::W - 2 * kM) * t), 4}, buttonColor(pendingButton(e), P));
+    }
+
     void status(Gfx& g, const EditorView& v) {
         const int y = kStatusY, s = 30;
         Font& f = g.font(P.mono, 20);
@@ -181,7 +425,8 @@ private:
     }
 
     Palette P = themes::sunset;
-    int top_ = 0;  // first visible document row
+    int top_ = 0;         // first visible document row
+    bool toast_ = false;  // a shell toast is showing in the top-right corner
 };
 
 int wrap(int i, int n) { return ((i % n) + n) % n; }

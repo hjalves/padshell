@@ -10,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 struct Color { uint8_t r, g, b, a = 255; };
 struct Rect { int x, y, w, h; };
@@ -32,8 +33,10 @@ public:
     int cellW() const { return cellW_; }  // advance of 'M'
     int lineH() const { return lineH_; }
     TTF_Font* ttf() const { return font_; }
+    // Glyph from this font, or from the first fallback that has it.
     SDL_Texture* glyph(uint32_t cp, int* w, int* h);
     SDL_Texture* string(std::string_view s, int* w, int* h);
+    void addFallback(Font* f) { fallbacks_.push_back(f); }
 
 private:
     struct Tex { SDL_Texture* tex; int w, h; };
@@ -44,6 +47,7 @@ private:
     int cellW_ = 0, lineH_ = 0;
     std::unordered_map<uint32_t, Tex> glyphs_;
     std::unordered_map<std::string, Tex> strings_;
+    std::vector<Font*> fallbacks_;
 };
 
 enum class Dir { Up, Down, Left, Right };
@@ -57,7 +61,8 @@ public:
     SDL_Renderer* sdl() const { return r_; }
 
     // Any bundled font by file name and pixel size, loaded on first use.
-    // Falls back to DejaVu Sans Mono if the file can't be opened.
+    // Falls back to DejaVu Sans Mono if the file can't be opened. Characters
+    // a font lacks are drawn from DejaVu Sans Mono, then Noto Emoji.
     Font& font(const std::string& file, int px, bool solid = false);
 
     void clear(Color c);
@@ -77,6 +82,9 @@ public:
     // Monospace grid text: each codepoint advances by cellW. Returns width.
     int print(Font& f, int x, int y, std::string_view s, Color c);
     void printCentered(Font& f, int cx, int y, std::string_view s, Color c);
+    // Like print(), but each codepoint takes utf8::width() cells: emoji get
+    // two (centred), joiners and variation selectors none. Returns cells used.
+    int printWide(Font& f, int x, int y, std::string_view s, Color c);
     static int width(Font& f, std::string_view s);
 
     // Proportional text. Returns the width drawn.

@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "apps/browser.h"
 #include "apps/editor.h"
 #include "gfx.h"
 #include "pad.h"
@@ -34,6 +35,7 @@ int main(int, char**) {
     skins::loadSettings(platform::dataDir() + "settings.ini");
     Shell shell;
     shell.add(std::make_unique<EditorApp>(platform::dataDir() + "notes.txt"));
+    shell.add(std::make_unique<BrowserApp>(platform::dataDir()));
 
     PadTracker tracker;
     while (shell.running()) {

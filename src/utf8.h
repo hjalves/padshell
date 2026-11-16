@@ -57,6 +57,20 @@ inline uint32_t decode(std::string_view s, size_t i) {
     return 0xFFFD;
 }
 
+// Display width in monospace cells: 0 for joiners, variation selectors and
+// combining marks; 2 for emoji and wide East Asian characters; else 1.
+inline int width(uint32_t c) {
+    if (c == 0x200D || (c >= 0xFE00 && c <= 0xFE0F) || (c >= 0x0300 && c <= 0x036F) || (c >= 0x1F3FB && c <= 0x1F3FF))
+        return 0;
+    if ((c >= 0x1F300 && c <= 0x1F64F) || (c >= 0x1F680 && c <= 0x1F6FF) || (c >= 0x1F900 && c <= 0x1FAFF) ||
+        (c >= 0x1F1E6 && c <= 0x1F1FF) || (c >= 0x1F004 && c <= 0x1F251) || c == 0x231A || c == 0x231B ||
+        (c >= 0x23E9 && c <= 0x23F3) || c == 0x2B50 || c == 0x2B55 || (c >= 0x1100 && c <= 0x115F) ||
+        (c >= 0x2E80 && c <= 0xA4CF) || (c >= 0xAC00 && c <= 0xD7A3) || (c >= 0xF900 && c <= 0xFAFF) ||
+        (c >= 0xFF00 && c <= 0xFF60) || (c >= 0xFFE0 && c <= 0xFFE6))
+        return 2;
+    return 1;
+}
+
 inline std::string encode(uint32_t c) {
     std::string out;
     if (c < 0x80) out += (char)c;

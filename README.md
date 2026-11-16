@@ -1,8 +1,10 @@
 # padshell
 
 A Nintendo Switch homebrew "shell": a set of apps in one process, driven
-entirely by the gamepad. The first app is a text editor you type into with
-phone-style multi-tap on the face buttons and D-pad, with no on-screen keyboard.
+entirely by the gamepad. It has two apps so far, switched with − : **notes**,
+a text editor you type into with phone-style multi-tap on the face buttons
+and D-pad (no on-screen keyboard), and **gemini**, a browser for the
+[Gemini protocol](https://geminiprotocol.net/).
 
 ![padshell editor](docs/screenshot.png)
 
@@ -139,12 +141,52 @@ ZL/ZR, `Return` +, `Tab` −, `Esc` quit. `tools/xdo_type.py "text"` types a
 string through it with xdotool. On-screen labels follow the platform (Xbox
 labels on desktop).
 
+## Gemini browser
+
+![Gemini browser](docs/gemini.png)
+
+| Button | Action |
+|---|---|
+| D-pad up/down | Previous/next link (scrolls instead when the next link is far away) |
+| D-pad left/right | Page up/down |
+| Left or right stick | Smooth scrolling, faster the further you push |
+| A | Open the selected link |
+| B | Back (stops loading while a page is loading) |
+| L / R | Back / forward |
+| Y | Type an address |
+| X | Home page, with bookmarks |
+| + | Menu: bookmark or remove, bookmarks, address, reload, trust a changed certificate |
+
+* **Gemtext** is rendered: headings, links (→, with "↗ https" on links to
+  other protocols, which can't be opened), list items, quotes and
+  preformatted blocks (not wrapped). Other text types are shown as plain
+  text.
+* **Input** (status 10/11) and the address bar use the same multi-tap as
+  notes; ZR + B (newline) sends, or + → send / cancel. Sensitive input
+  (11) is masked.
+* **Bookmarks** are stored as gemtext in `bookmarks.gmi` next to the notes
+  and listed on the home page. Selecting one there and choosing *remove
+  this bookmark* in the + menu deletes it.
+* **Certificates** use trust on first use: a host's certificate SHA-256
+  is remembered in `known_hosts` on the first visit, and a later change is
+  refused with an explanation until you choose *trust new certificate*.
+  Client certificates are not supported.
+* **Emoji** and other symbols missing from the chosen font come from DejaVu
+  Sans Mono, then Noto Emoji (monochrome, so they follow the theme colour).
+* Redirects are followed up to five times; responses are limited to 8 MB;
+  network work runs on a background thread with a 15 s timeout.
+
+`tools/gemfetch` (desktop only) fetches one URL with the same client and
+prints the response, for testing.
+
 ## Building
 
 ### Desktop (Linux)
 
 Needs CMake, a C++20 compiler, SDL2 and SDL2_ttf
-(Arch: `pacman -S cmake sdl2-compat sdl2_ttf`).
+(Arch: `pacman -S cmake sdl2-compat sdl2_ttf`). The first configure
+downloads and builds mbedtls 2.28.10, the version the Switch uses
+(distributions now ship 3.x/4.x, whose API differs).
 
 ```sh
 cmake -S . -B build && cmake --build build -j
@@ -154,7 +196,7 @@ ctest --test-dir build          # unit tests
 
 ### Switch (.nro)
 
-With devkitPro installed natively (`dkp-pacman -S switch-dev switch-sdl2 switch-sdl2_ttf`):
+With devkitPro installed natively (`dkp-pacman -S switch-dev switch-sdl2 switch-sdl2_ttf switch-mbedtls`):
 
 ```sh
 /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S . -B build-switch
@@ -192,10 +234,13 @@ src/
   skins/            the ameno layout (ameno.cpp) and its themes (family.h)
   app.h             interface every app implements
   apps/editor.*     the text editor
+  apps/browser.*    the Gemini browser
+  gemini/           URL handling, gemtext parsing, TLS client (mbedtls)
+  textinput.h       single-line multi-tap field (address bar, prompts)
 tests/              host-only unit tests
 romfs/              bundled fonts: DejaVu Sans Mono, plus JetBrains Mono,
-                    IBM Plex Mono, Fira Mono, Space Mono and Courier Prime
-                    under the SIL OFL (licences alongside)
+                    IBM Plex Mono, Fira Mono, Space Mono, Courier Prime and
+                    Noto Emoji under the SIL OFL (licences alongside)
 tools/              build script, xdotool typing helper for desktop testing
 ```
 

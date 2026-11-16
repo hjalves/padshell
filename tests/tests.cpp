@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <string>
 
+#include "../src/gemini/gemtext.h"
+#include "../src/gemini/url.h"
 #include "../src/multitap.h"
 #include "../src/skin.h"
 #include "../src/pad.h"
@@ -309,6 +311,53 @@ static void testLayout() {
     CHECK(L.rows.size() == 2 && L.cursorRow == 1 && L.cursorX == 0);
 }
 
+static void testUrl() {
+    using gem::Url;
+    // RFC 3986 section 5.4 reference resolution examples (adapted to gemini:).
+    Url base = Url::parse("gemini://a/b/c/d;p?q");
+    struct Case { const char* ref; const char* want; };
+    const Case cases[] = {
+        {"g", "gemini://a/b/c/g"},        {"./g", "gemini://a/b/c/g"},     {"g/", "gemini://a/b/c/g/"},
+        {"/g", "gemini://a/g"},           {"//g", "gemini://g/"},          {"?y", "gemini://a/b/c/d;p?y"},
+        {"g?y", "gemini://a/b/c/g?y"},    {"#s", "gemini://a/b/c/d;p?q"},  {"", "gemini://a/b/c/d;p?q"},
+        {".", "gemini://a/b/c/"},         {"./", "gemini://a/b/c/"},       {"..", "gemini://a/b/"},
+        {"../", "gemini://a/b/"},         {"../g", "gemini://a/b/g"},      {"../..", "gemini://a/"},
+        {"../../g", "gemini://a/g"},      {"../../../g", "gemini://a/g"},  {"/./g", "gemini://a/g"},
+        {"g.", "gemini://a/b/c/g."},      {"./../g", "gemini://a/b/g"},    {"g;x=1/../y", "gemini://a/b/c/y"},
+        {"https://x.org/p", "https://x.org/p"},
+    };
+    for (const Case& c : cases) {
+        std::string got = base.resolve(c.ref).str();
+        if (got != c.want) std::printf("  resolve(\"%s\") = %s, want %s\n", c.ref, got.c_str(), c.want);
+        CHECK(got == c.want);
+    }
+    Url u = Url::parse("GEMINI://Example.ORG:1965");
+    CHECK(u.str() == "gemini://example.org/" && u.portNumber() == 1965 && u.hostPort() == "example.org:1965");
+    CHECK(Url::parse("gemini://h:7000/x").portNumber() == 7000);
+    CHECK(Url::parse("about:home").scheme == "about" && Url::parse("about:home").path == "home");
+    CHECK(!Url::parse("no scheme here").valid());
+    CHECK(gem::percentEncode("a b/ç?") == "a%20b%2F%C3%A7%3F");
+}
+
+static void testGemtext() {
+    auto lines = gem::parseGemtext(
+        "# Title\n## Sub\n### Small\ntext line\n=> gemini://x.org/ Label here\n=>/rel\n=>  \n* item\n> quote\n"
+        "```alt\n# not a heading\n=> not a link\n```\nafter\r\n");
+    using L = gem::Line;
+    CHECK(lines.size() == 12);
+    CHECK(lines[0].kind == L::H1 && lines[0].text == "Title");
+    CHECK(lines[1].kind == L::H2 && lines[2].kind == L::H3);
+    CHECK(lines[3].kind == L::Text && lines[3].text == "text line");
+    CHECK(lines[4].kind == L::Link && lines[4].url == "gemini://x.org/" && lines[4].text == "Label here");
+    CHECK(lines[5].kind == L::Link && lines[5].url == "/rel" && lines[5].text == "/rel");
+    CHECK(lines[6].kind == L::Text);  // "=>" with no URL
+    CHECK(lines[7].kind == L::Item && lines[7].text == "item");
+    CHECK(lines[8].kind == L::Quote && lines[8].text == "quote");
+    CHECK(lines[9].kind == L::Pre && lines[9].text == "# not a heading");
+    CHECK(lines[10].kind == L::Pre && lines[10].text == "=> not a link");
+    CHECK(lines[11].kind == L::Text && lines[11].text == "after");
+}
+
 int main() {
     testBuffer();
     testTracker();
@@ -317,6 +366,8 @@ int main() {
     testCursorMoves();
     testEditingAtCursor();
     testLayout();
+    testUrl();
+    testGemtext();
     if (g_failed) {
         std::printf("%d check(s) failed\n", g_failed);
         return 1;

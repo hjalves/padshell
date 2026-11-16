@@ -38,6 +38,9 @@ SDL_Surface* Font::render(const char* s) {
 }
 
 SDL_Texture* Font::glyph(uint32_t cp, int* w, int* h) {
+    if (cp > ' ' && !TTF_GlyphIsProvided32(font_, cp))
+        for (Font* f : fallbacks_)
+            if (TTF_GlyphIsProvided32(f->font_, cp)) return f->glyph(cp, w, h);
     auto it = glyphs_.find(cp);
     if (it == glyphs_.end()) {
         Tex t{nullptr, 0, 0};
@@ -90,7 +93,13 @@ Font& Gfx::font(const std::string& file, int px, bool solid) {
     if (it != fonts_.end()) return *it->second;
     auto f = std::make_unique<Font>();
     if (!f->open(r_, fontDir_ + file, px, solid)) f->open(r_, fontDir_ + "DejaVuSansMono.ttf", px, solid);
-    return *fonts_.emplace(key, std::move(f)).first->second;
+    Font& font = *fonts_.emplace(key, std::move(f)).first->second;  // map nodes are stable
+    // Fallback chain for missing characters (box drawing, emoji...).
+    if (file != "NotoEmoji.ttf") {
+        if (file != "DejaVuSansMono.ttf") font.addFallback(&this->font("DejaVuSansMono.ttf", px, solid));
+        font.addFallback(&this->font("NotoEmoji.ttf", px, solid));
+    }
+    return font;
 }
 
 void Gfx::clear(Color c) {
@@ -222,6 +231,26 @@ int Gfx::print(Font& f, int x, int y, std::string_view s, Color c) {
 
 void Gfx::printCentered(Font& f, int cx, int y, std::string_view s, Color c) {
     print(f, cx - width(f, s) / 2, y, s, c);
+}
+
+int Gfx::printWide(Font& f, int x, int y, std::string_view s, Color c) {
+    int cells = 0;
+    for (size_t i = 0; i < s.size(); i = utf8::next(s, i)) {
+        uint32_t cp = utf8::decode(s, i);
+        int wcells = utf8::width(cp);
+        if (wcells == 0) continue;
+        int w, h;
+        if (cp != ' ')
+            if (SDL_Texture* t = f.glyph(cp, &w, &h)) {
+                SDL_SetTextureColorMod(t, c.r, c.g, c.b);
+                SDL_SetTextureAlphaMod(t, c.a);
+                int cx = x + cells * f.cellW() + (wcells * f.cellW() - w) / 2;
+                SDL_Rect dst{wcells > 1 ? cx : x + cells * f.cellW(), y, w, h};
+                SDL_RenderCopy(r_, t, nullptr, &dst);
+            }
+        cells += wcells;
+    }
+    return cells;
 }
 
 int Gfx::width(Font& f, std::string_view s) { return (int)utf8::length(s) * f.cellW(); }
