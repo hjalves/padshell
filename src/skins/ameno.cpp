@@ -13,6 +13,7 @@ const Palette& P = darkPalette();
 const char* kMono = "DejaVuSansMono.ttf";
 const char* kBold = "DejaVuSansMono-Bold.ttf";
 constexpr int kM = 64;        // side margin
+constexpr int kTopY = 42;      // top bar text row; mirrors the badges row's distance from the bottom
 constexpr int kStatusY = 640;  // badges row; timer below it, just inside the TV-safe bottom margin
 
 class Ameno : public Skin {
@@ -22,35 +23,35 @@ public:
     Rect frame(Gfx& g, const ShellView& v) override {
         g.clear(P.bg);
         Font& brand = g.font(kBold, 30);
-        int x = kM + g.draw(brand, kM, 20, "padshell", P.letters);
-        g.draw(g.font(kMono, 30), x + 16, 20, v.heading, P.muted);
+        int x = kM + g.draw(brand, kM, kTopY, "padshell", P.letters);
+        g.draw(g.font(kMono, 30), x + 16, kTopY, v.heading, P.muted);
         Font& clock = g.font(kMono, 30);
-        g.draw(clock, Gfx::W - kM - Gfx::measure(clock, v.clock), 20, v.clock, P.text);
+        g.draw(clock, Gfx::W - kM - Gfx::measure(clock, v.clock), kTopY, v.clock, P.text);
         if (!v.toast.empty()) {
             Font& t = g.font(kMono, 15);
-            g.draw(t, Gfx::W - kM - Gfx::measure(t, v.toast), 64, v.toast, P.caps);
+            g.draw(t, Gfx::W - kM - Gfx::measure(t, v.toast), kTopY + 44, v.toast, P.caps);
         }
-        diagram(g, Gfx::W - 227 - 187, 10, v.pad ? v.pad->held : 0);
-        return {kM, 64, Gfx::W - 2 * kM, Gfx::H - 64};
+        diagram(g, Gfx::W - 227 - 187, kTopY - 10, v.pad ? v.pad->held : 0);
+        return {kM, kTopY + 44, Gfx::W - 2 * kM, Gfx::H - (kTopY + 44)};
     }
 
     void editor(Gfx& g, Rect a, const EditorView& v) override {
         Font& meta = g.font(kMono, 15);
-        g.draw(meta, kM, 64, std::to_string(v.lineCount()) + (v.lineCount() == 1 ? " line" : " lines") +
+        g.draw(meta, kM, kTopY + 44, std::to_string(v.lineCount()) + (v.lineCount() == 1 ? " line" : " lines") +
                                  " \xC2\xB7 " + std::to_string(v.chars()) + " chars" + (v.modified ? " \xC2\xB7 unsaved" : ""),
                P.muted);
 
         Font& f = g.font(kMono, 38);
-        document(g, {kM, 117, a.w, 486}, v, P, {&f, 54, 6});
+        document(g, {kM, kTopY + 97, a.w, 8 * 54}, v, P, {&f, 54, 6});
 
         status(g, v);
     }
 
     void menu(Gfx& g, const std::string& title, const std::vector<std::string>& items, int sel) override {
-        g.fill({0, 100, Gfx::W, kStatusY - 116}, P.bg);
-        g.draw(g.font(kMono, 21), kM, 127, title, P.muted);
+        g.fill({0, kTopY + 80, Gfx::W, kStatusY - 16 - (kTopY + 80)}, P.bg);
+        g.draw(g.font(kMono, 21), kM, kTopY + 107, title, P.muted);
         Font& f = g.font(kMono, 38), &fb = g.font(kBold, 38);
-        int y = 180;
+        int y = kTopY + 160;
         for (int i = 0; i < (int)items.size(); ++i) {
             bool on = i == sel;
             if (on) g.fill({kM, y, 600, 64}, P.letters);
