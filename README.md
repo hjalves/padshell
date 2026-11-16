@@ -1,10 +1,11 @@
 # padshell
 
 A Nintendo Switch homebrew "shell": a set of apps in one process, driven
-entirely by the gamepad. It has two apps so far, switched with − : **notes**,
-a text editor you type into with phone-style multi-tap on the face buttons
-and D-pad (no on-screen keyboard), and **gemini**, a browser for the
-[Gemini protocol](https://geminiprotocol.net/).
+entirely by the gamepad. It has two apps so far, switched with − :
+**gemini** (opens at launch), a browser for the
+[Gemini protocol](https://geminiprotocol.net/), and **notes**, a text editor
+you type into with phone-style multi-tap on the face buttons and D-pad (no
+on-screen keyboard).
 
 ![padshell editor](docs/screenshot.png)
 

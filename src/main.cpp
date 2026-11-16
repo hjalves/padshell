@@ -34,8 +34,9 @@ int main(int, char**) {
 
     skins::loadSettings(platform::dataDir() + "settings.ini");
     Shell shell;
-    shell.add(std::make_unique<EditorApp>(platform::dataDir() + "notes.txt"));
+    // The first app is the one shown at launch.
     shell.add(std::make_unique<BrowserApp>(platform::dataDir()));
+    shell.add(std::make_unique<EditorApp>(platform::dataDir() + "notes.txt"));
 
     PadTracker tracker;
     while (shell.running()) {
