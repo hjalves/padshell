@@ -6,6 +6,7 @@
 // It is the only layout. The colour theme and the font are chosen
 // independently (app menu, saved in settings.ini); both tables and the
 // settings live at the bottom of this file.
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 
@@ -18,14 +19,16 @@ constexpr int kM = 64;         // side margin
 constexpr int kTopY = 42;      // top bar text row; mirrors the badges row's distance from the bottom
 constexpr int kStatusY = 640;  // badges row; timer below it, just inside the TV-safe bottom margin
 
-struct Theme { const char* name; const Palette& palette; };
+// Optional animated background drawn behind everything.
+enum class Backdrop { None, Starfield };
+struct Theme { const char* name; const Palette& palette; Backdrop backdrop = Backdrop::None; };
 const Theme kThemes[] = {
     {"sunset", themes::sunset}, {"dusk", themes::dusk},         {"lava", themes::lava},
     {"gold", themes::gold},     {"tropic", themes::tropic},     {"rose", themes::rose},
     {"ember", themes::ember},   {"midnight", themes::midnight}, {"moon", themes::moon},     {"ocean", themes::ocean},
     {"carbon", themes::carbon}, {"neon", themes::neon},         {"cyber", themes::cyber},
     {"vapor", themes::vapor},   {"ice", themes::ice},           {"night", themes::night},
-    {"day", themes::day},
+    {"starfield", themes::starfield, Backdrop::Starfield}, {"day", themes::day},
 };
 struct FontPair { const char* id; const char* name; const char* regular; const char* bold; };
 const FontPair kFonts[] = {
@@ -50,6 +53,7 @@ public:
     Rect frame(Gfx& g, const ShellView& v) override {
         sync();
         g.clear(P.bg);
+        if (kThemes[g_theme].backdrop == Backdrop::Starfield) starfield(g);
         Font& brand = g.font(P.bold, 30);
         int x = kM + g.draw(brand, kM, kTopY, "padshell", ink(P.letters, P));
         g.draw(g.font(P.mono, 30), x + 16, kTopY, v.heading, P.muted);
@@ -123,6 +127,50 @@ private:
         g.fill({kM, kStatusY + 44, Gfx::W - 2 * kM, 4}, P.surface);
         if (float t = timerLeft(v); t > 0)
             g.fill({kM, kStatusY + 44, (int)((Gfx::W - 2 * kM) * t), 4}, buttonColor(pendingButton(v), P));
+    }
+
+    // Stars flying slowly towards the viewer from the centre of the screen.
+    // Stateless: each star's depth is a function of the clock, wrapping back
+    // to the far plane, so it needs no per-frame state. Kept small and dim so
+    // the text stays the brightest thing on screen.
+    static void starfield(Gfx& g) {
+        constexpr int kStars = 260;
+        constexpr float kCycle = 20.0f;  // seconds for a star to travel from far to near
+        const float t = SDL_GetTicks() / 1000.0f;
+        const float cx = Gfx::W / 2.0f, cy = Gfx::H / 2.0f;
+        uint32_t seed = 0x9E3779B9u;
+        auto rnd = [&seed] {  // deterministic xorshift, same sky every frame
+            seed ^= seed << 13;
+            seed ^= seed >> 17;
+            seed ^= seed << 5;
+            return (seed & 0xFFFFFF) / float(0x1000000);
+        };
+        auto project = [&](float x, float y, float z, float& sx, float& sy) {
+            sx = cx + x / z * cx * 0.5f;
+            sy = cy + y / z * cy * 0.5f;
+        };
+        for (int i = 0; i < kStars; ++i) {
+            const float x = rnd() * 2 - 1, y = rnd() * 2 - 1, phase = rnd(), tint = rnd();
+            const float z = 0.05f + 0.95f * (1.0f - std::fmod(phase + t / kCycle, 1.0f));  // 1 far .. 0.05 near
+            float sx, sy;
+            project(x, y, z, sx, sy);
+            if (sx < 0 || sy < 0 || sx >= Gfx::W || sy >= Gfx::H) continue;
+            const float nearness = (1.0f - z) / 0.95f;  // 0 far .. 1 near
+            const int size = nearness > 0.6f ? 3 : nearness > 0.3f ? 2 : 1;
+            const uint8_t a = (uint8_t)(90 + 140 * nearness);
+            const Color c = tint < 0.7f ? Color{225, 232, 255, a} : tint < 0.85f ? Color{170, 215, 255, a}
+                                                                                 : Color{255, 230, 200, a};
+            // Near stars leave a short fading trail back towards the centre.
+            if (nearness > 0.45f) {
+                for (int k = 1; k <= 3; ++k) {
+                    float tx, ty;
+                    project(x, y, z + 0.012f * k, tx, ty);
+                    g.fill({(int)tx, (int)ty, size - 1 > 0 ? size - 1 : 1, size - 1 > 0 ? size - 1 : 1},
+                           withAlpha(c, (uint8_t)(a / (k + 1))));
+                }
+            }
+            g.fill({(int)sx, (int)sy, size, size}, c);
+        }
     }
 
     // The current theme's colours with the current font filled in.
