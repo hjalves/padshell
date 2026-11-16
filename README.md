@@ -18,33 +18,35 @@ character is being selected it appears at the cursor in its button's colour,
 the status line shows its cycle, and a bar counts down to the commit. Tags on
 the right show caps and the current mode.
 
-## Themes
+## Themes and fonts
 
-One layout, many themes (a palette plus a monospaced font pair), picked in
-the − app menu: highlight *style* and press A, or D-pad left/right, to cycle
-while the menu stays open as a preview. The choice is saved in
-`settings.ini` next to the notes.
+The colour theme and the font are chosen independently in the − app menu:
+highlight *theme* or *font* and press A, or D-pad left/right, to cycle while
+the menu stays open as a preview. Both are saved in `settings.ini` next to
+the notes (`theme=sunset`, `font=space-mono`).
 
 ![Themes](docs/styles.png)
 
-| Theme | Look | Font |
-|---|---|---|
-| **ameno-sunset** (default) | Pure black, hot orange accent with magenta and lime | Space Mono |
-| **ameno-dusk** | Violet-black, violet accent | Space Mono |
-| **ameno-lava** | Warm black, red-orange accent; edit mode is crimson-pink to stay distinct | Space Mono |
-| **ameno-gold** | Black, amber accent; the caps tag is cyan to stand apart | Space Mono |
-| **ameno-tropic** | Teal-black, orange accent | Space Mono |
-| **ameno-rose** | Pink-black, rose accent | Space Mono |
-| **ameno-ember** | Warm dark brown, coral and amber | Space Mono |
-| **ameno** | Midnight: violet-black, pink accent | DejaVu Sans Mono |
-| **ameno-ocean** | Deep navy, cyan accent | JetBrains Mono |
-| **ameno-carbon** | Neutral black, IBM blue | IBM Plex Mono |
-| **ameno-neon** | Pure black, electric magenta, lime and cyan | Fira Mono |
-| **ameno-neon-space** | neon's palette | Space Mono |
-| **ameno-cyber** | Pure black, electric cyan accent with yellow and magenta | Space Mono |
-| **ameno-vapor** | Violet-black, hot pink accent, softer neons | Space Mono |
-| **ameno-ice** | Blue-black, electric periwinkle accent with cyan and mint | Space Mono |
-| **ameno-day** | Light paper, darkened ink colours for text | Courier Prime |
+| Theme | Look |
+|---|---|
+| **sunset** (default) | Pure black, hot orange accent with magenta and lime |
+| **dusk** | Violet-black, violet accent |
+| **lava** | Warm black, red-orange accent; edit mode is crimson-pink to stay distinct |
+| **gold** | Black, amber accent; the caps tag is cyan to stand apart |
+| **tropic** | Teal-black, orange accent |
+| **rose** | Pink-black, rose accent |
+| **ember** | Warm dark brown, coral and amber |
+| **midnight** | Violet-black, pink accent (the original ameno colours) |
+| **ocean** | Deep navy, cyan accent |
+| **carbon** | Neutral black, IBM blue |
+| **neon** | Pure black, electric magenta, lime and cyan |
+| **cyber** | Pure black, electric cyan accent with yellow and magenta |
+| **vapor** | Violet-black, hot pink accent, softer neons |
+| **ice** | Blue-black, electric periwinkle accent with cyan and mint |
+| **day** | Light paper, darkened ink colours for text |
+
+Fonts: **Space Mono** (default), JetBrains Mono, IBM Plex Mono, Fira Mono,
+DejaVu Sans Mono and Courier Prime.
 
 Conventions shared by every theme (`src/skins/family.h`):
 
@@ -62,8 +64,8 @@ Conventions shared by every theme (`src/skins/family.h`):
   for caps.
 
 The layout is `src/skins/ameno.cpp`; a theme is a `Palette` in
-`themes::` (`family.h`) registered with one line at the bottom of
-`ameno.cpp` and in `skin.cpp`. Skins receive a read-only view of the shell
+`themes::` (`family.h`) listed in `kThemes` in `ameno.cpp`, and a font is a
+Regular/Bold pair listed in `kFonts` there. Skins receive a read-only view of the shell
 and editor state (`src/skin.h`), so a new layout needs no changes to the
 editor or input code.
 

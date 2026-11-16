@@ -3,8 +3,12 @@
 // and a status line of flat button badges with their groups, the pending
 // character's cycle, mode tags and a commit timer.
 //
-// The layout is shared by several themes (palette + monospaced font pair),
-// each registered as its own style: ameno, ameno-ocean, ameno-carbon, ...
+// It is the only layout. The colour theme and the font are chosen
+// independently (app menu, saved in settings.ini); both tables and the
+// settings live at the bottom of this file.
+#include <cstdio>
+#include <cstring>
+
 #include "family.h"
 
 namespace {
@@ -14,12 +18,36 @@ constexpr int kM = 64;         // side margin
 constexpr int kTopY = 42;      // top bar text row; mirrors the badges row's distance from the bottom
 constexpr int kStatusY = 640;  // badges row; timer below it, just inside the TV-safe bottom margin
 
+struct Theme { const char* name; const Palette& palette; };
+const Theme kThemes[] = {
+    {"sunset", themes::sunset}, {"dusk", themes::dusk},         {"lava", themes::lava},
+    {"gold", themes::gold},     {"tropic", themes::tropic},     {"rose", themes::rose},
+    {"ember", themes::ember},   {"midnight", themes::midnight}, {"ocean", themes::ocean},
+    {"carbon", themes::carbon}, {"neon", themes::neon},         {"cyber", themes::cyber},
+    {"vapor", themes::vapor},   {"ice", themes::ice},           {"day", themes::day},
+};
+struct FontPair { const char* id; const char* name; const char* regular; const char* bold; };
+const FontPair kFonts[] = {
+    {"space-mono", "Space Mono", "SpaceMono-Regular.ttf", "SpaceMono-Bold.ttf"},
+    {"jetbrains-mono", "JetBrains Mono", "JetBrainsMono-Regular.ttf", "JetBrainsMono-Bold.ttf"},
+    {"ibm-plex-mono", "IBM Plex Mono", "IBMPlexMono-Regular.ttf", "IBMPlexMono-Bold.ttf"},
+    {"fira-mono", "Fira Mono", "FiraMono-Regular.ttf", "FiraMono-Bold.ttf"},
+    {"dejavu-sans-mono", "DejaVu Sans Mono", "DejaVuSansMono.ttf", "DejaVuSansMono-Bold.ttf"},
+    {"courier-prime", "Courier Prime", "CourierPrime-Regular.ttf", "CourierPrime-Bold.ttf"},
+};
+constexpr int kThemeCount = sizeof kThemes / sizeof *kThemes;
+constexpr int kFontCount = sizeof kFonts / sizeof *kFonts;
+
+// Current choices (defaults: sunset, Space Mono) and where they are saved.
+int g_theme = 0, g_font = 0;
+std::string g_settingsPath;
+
 class Ameno : public Skin {
 public:
-    Ameno(const char* name, const Palette& p) : name_(name), P(p) {}
-    const char* name() const override { return name_; }
+    const char* name() const override { return "ameno"; }
 
     Rect frame(Gfx& g, const ShellView& v) override {
+        sync();
         g.clear(P.bg);
         Font& brand = g.font(P.bold, 30);
         int x = kM + g.draw(brand, kM, kTopY, "padshell", ink(P.letters, P));
@@ -34,6 +62,7 @@ public:
     }
 
     void editor(Gfx& g, Rect a, const EditorView& v) override {
+        sync();
         Font& meta = g.font(P.mono, 17);
         g.draw(meta, kM, kTopY + 44, std::to_string(v.lineCount()) + (v.lineCount() == 1 ? " line" : " lines") +
                                          " \xC2\xB7 " + std::to_string(v.chars()) + " chars" +
@@ -47,6 +76,7 @@ public:
     }
 
     void menu(Gfx& g, const std::string& title, const std::vector<std::string>& items, int sel) override {
+        sync();
         g.fill({0, kTopY + 80, Gfx::W, kStatusY - 16 - (kTopY + 80)}, P.bg);
         g.draw(g.font(P.mono, 21), kM, kTopY + 107, title, P.muted);
         Font& f = g.font(P.mono, 38), &fb = g.font(P.bold, 38);
@@ -93,24 +123,79 @@ private:
             g.fill({kM, kStatusY + 44, (int)((Gfx::W - 2 * kM) * t), 4}, buttonColor(pendingButton(v), P));
     }
 
-    const char* name_;
-    const Palette& P;
+    // The current theme's colours with the current font filled in.
+    void sync() {
+        P = kThemes[g_theme].palette;
+        P.mono = kFonts[g_font].regular;
+        P.bold = kFonts[g_font].bold;
+    }
+
+    Palette P = themes::sunset;
 };
+
+int wrap(int i, int n) { return ((i % n) + n) % n; }
+
+void save() {
+    if (g_settingsPath.empty()) return;
+    if (FILE* f = std::fopen(g_settingsPath.c_str(), "w")) {
+        std::fprintf(f, "theme=%s\nfont=%s\n", kThemes[g_theme].name, kFonts[g_font].id);
+        std::fclose(f);
+    }
+}
+
+int findTheme(const char* name) {
+    for (int i = 0; i < kThemeCount; ++i)
+        if (std::strcmp(kThemes[i].name, name) == 0) return i;
+    return -1;
+}
+
+int findFont(const char* id) {
+    for (int i = 0; i < kFontCount; ++i)
+        if (std::strcmp(kFonts[i].id, id) == 0) return i;
+    return -1;
+}
 }  // namespace
 
-Skin* makeAmeno() { static Ameno s("ameno", themes::midnight); return &s; }
-Skin* makeAmenoOcean() { static Ameno s("ameno-ocean", themes::ocean); return &s; }
-Skin* makeAmenoCarbon() { static Ameno s("ameno-carbon", themes::carbon); return &s; }
-Skin* makeAmenoNeon() { static Ameno s("ameno-neon", themes::neon); return &s; }
-Skin* makeAmenoNeonSpace() { static Ameno s("ameno-neon-space", themes::neonSpace); return &s; }
-Skin* makeAmenoCyber() { static Ameno s("ameno-cyber", themes::cyber); return &s; }
-Skin* makeAmenoVapor() { static Ameno s("ameno-vapor", themes::vapor); return &s; }
-Skin* makeAmenoSunset() { static Ameno s("ameno-sunset", themes::sunset); return &s; }
-Skin* makeAmenoIce() { static Ameno s("ameno-ice", themes::ice); return &s; }
-Skin* makeAmenoDusk() { static Ameno s("ameno-dusk", themes::dusk); return &s; }
-Skin* makeAmenoLava() { static Ameno s("ameno-lava", themes::lava); return &s; }
-Skin* makeAmenoGold() { static Ameno s("ameno-gold", themes::gold); return &s; }
-Skin* makeAmenoTropic() { static Ameno s("ameno-tropic", themes::tropic); return &s; }
-Skin* makeAmenoRose() { static Ameno s("ameno-rose", themes::rose); return &s; }
-Skin* makeAmenoEmber() { static Ameno s("ameno-ember", themes::ember); return &s; }
-Skin* makeAmenoDay() { static Ameno s("ameno-day", themes::day); return &s; }
+namespace skins {
+Skin& current() {
+    static Ameno s;
+    return s;
+}
+
+int themeCount() { return kThemeCount; }
+int themeIndex() { return g_theme; }
+std::string themeName(int i) { return kThemes[wrap(i, kThemeCount)].name; }
+void selectTheme(int i) { g_theme = wrap(i, kThemeCount); save(); }
+int fontCount() { return kFontCount; }
+int fontIndex() { return g_font; }
+std::string fontName(int i) { return kFonts[wrap(i, kFontCount)].name; }
+void selectFont(int i) { g_font = wrap(i, kFontCount); save(); }
+
+void loadSettings(const std::string& path) {
+    g_settingsPath = path;
+    FILE* f = std::fopen(path.c_str(), "r");
+    if (!f) return;  // first run: defaults
+    char line[128];
+    bool fontSet = false;
+    while (std::fgets(line, sizeof line, f)) {
+        line[std::strcspn(line, "\r\n")] = 0;
+        if (std::strncmp(line, "theme=", 6) == 0) {
+            if (int i = findTheme(line + 6); i >= 0) g_theme = i;
+        } else if (std::strncmp(line, "font=", 5) == 0) {
+            if (int i = findFont(line + 5); i >= 0) { g_font = i; fontSet = true; }
+        } else if (std::strncmp(line, "style=", 6) == 0) {
+            // Older versions saved one "style" per theme+font, e.g.
+            // "ameno-sunset"; "ameno" alone was the midnight theme.
+            std::string s = line + 6;
+            if (s.rfind("ameno-", 0) == 0) s = s.substr(6);
+            if (s == "ameno") s = "midnight";
+            if (s == "neon-space") {
+                s = "neon";
+                if (!fontSet) g_font = findFont("space-mono");
+            }
+            if (int i = findTheme(s.c_str()); i >= 0) g_theme = i;
+        }
+    }
+    std::fclose(f);
+}
+}  // namespace skins

@@ -51,10 +51,18 @@ public:
 };
 
 namespace skins {
-const std::vector<Skin*>& all();
 Skin& current();
-int index();
-void select(int i);  // also saves the setting
+
+// The colour theme and the font are chosen independently in the app menu and
+// saved in settings.ini. Selecting wraps around and saves.
+int themeCount();
+int themeIndex();
+std::string themeName(int i);
+void selectTheme(int i);
+int fontCount();
+int fontIndex();
+std::string fontName(int i);
+void selectFont(int i);
 void loadSettings(const std::string& path);
 
 // --- helpers shared by skins ---

@@ -34,76 +34,7 @@ std::string_view EditorView::rowText(const WrapRow& r) const {
     return std::string_view((*lines)[r.line]).substr(r.from, r.to - r.from);
 }
 
-// --- registry -----------------------------------------------------------------
-
-// Defined in src/skins/*.cpp.
-Skin* makeAmeno();
-Skin* makeAmenoOcean();
-Skin* makeAmenoCarbon();
-Skin* makeAmenoNeon();
-Skin* makeAmenoNeonSpace();
-Skin* makeAmenoCyber();
-Skin* makeAmenoVapor();
-Skin* makeAmenoSunset();
-Skin* makeAmenoIce();
-Skin* makeAmenoDusk();
-Skin* makeAmenoLava();
-Skin* makeAmenoGold();
-Skin* makeAmenoTropic();
-Skin* makeAmenoRose();
-Skin* makeAmenoEmber();
-Skin* makeAmenoDay();
-
 namespace skins {
-namespace {
-constexpr const char* kDefaultStyle = "ameno-sunset";
-int g_index = -1;  // resolved on first use
-std::string g_path;
-
-int indexOf(const char* name) {
-    for (size_t i = 0; i < all().size(); ++i)
-        if (std::strcmp(all()[i]->name(), name) == 0) return (int)i;
-    return -1;
-}
-}  // namespace
-
-const std::vector<Skin*>& all() {
-    static const std::vector<Skin*> list = {
-        makeAmenoSunset(), makeAmenoDusk(),   makeAmenoLava(),   makeAmenoGold(),       makeAmenoTropic(),
-        makeAmenoRose(),   makeAmenoEmber(),  makeAmeno(),       makeAmenoOcean(),      makeAmenoCarbon(),
-        makeAmenoNeon(),   makeAmenoNeonSpace(), makeAmenoCyber(), makeAmenoVapor(),    makeAmenoIce(),
-        makeAmenoDay()};
-    return list;
-}
-
-int index() {
-    if (g_index < 0) g_index = std::max(0, indexOf(kDefaultStyle));
-    return g_index;
-}
-Skin& current() { return *all()[index()]; }
-
-void select(int i) {
-    const int n = (int)all().size();
-    g_index = ((i % n) + n) % n;
-    if (g_path.empty()) return;
-    if (FILE* f = std::fopen(g_path.c_str(), "w")) {
-        std::fprintf(f, "style=%s\n", current().name());
-        std::fclose(f);
-    }
-}
-
-void loadSettings(const std::string& path) {
-    g_path = path;
-    FILE* f = std::fopen(path.c_str(), "r");
-    if (!f) return;  // first run: keep the default
-    char line[128];
-    while (std::fgets(line, sizeof line, f)) {
-        line[std::strcspn(line, "\r\n")] = 0;
-        if (std::strncmp(line, "style=", 6) != 0) continue;
-        if (int i = indexOf(line + 6); i >= 0) g_index = i;
-    }
-    std::fclose(f);
-}
 
 // --- helpers ------------------------------------------------------------------
 

@@ -29,7 +29,8 @@ void Shell::switchTo(int index) {
 std::vector<std::string> Shell::launcherItems() const {
     std::vector<std::string> items;
     for (const auto& a : apps_) items.push_back(a->heading());
-    items.push_back(std::string("style: ") + skins::current().name());
+    items.push_back("theme: " + skins::themeName(skins::themeIndex()));
+    items.push_back("font: " + skins::fontName(skins::fontIndex()));
     items.push_back("quit");
     return items;
 }
@@ -45,14 +46,16 @@ void Shell::update(const Gamepad& pad) {
         apps_[current_]->update(pad, *this);
         return;
     }
-    // Launcher: apps, then "style", then "quit".
-    const int n = (int)apps_.size() + 2, styleItem = n - 2, quitItem = n - 1;
+    // Launcher: apps, then "theme", "font" and "quit". Theme and font cycle
+    // in place (A or left/right) so the change previews behind the menu.
+    const int n = (int)apps_.size() + 3, themeItem = n - 3, fontItem = n - 2, quitItem = n - 1;
     if (pad.rep(DUp)) sel_ = (sel_ + n - 1) % n;
     if (pad.rep(DDown)) sel_ = (sel_ + 1) % n;
     if (pad.hit(kBack)) launcher_ = false;
-    if (sel_ == styleItem) {  // cycle styles; the menu stays open to preview
-        if (pad.hit(kConfirm) || pad.rep(DRight)) skins::select(skins::index() + 1);
-        if (pad.rep(DLeft)) skins::select(skins::index() - 1);
+    if (sel_ == themeItem || sel_ == fontItem) {
+        int step = (pad.hit(kConfirm) || pad.rep(DRight)) ? 1 : pad.rep(DLeft) ? -1 : 0;
+        if (step && sel_ == themeItem) skins::selectTheme(skins::themeIndex() + step);
+        if (step && sel_ == fontItem) skins::selectFont(skins::fontIndex() + step);
         return;
     }
     if (pad.hit(kConfirm)) {
