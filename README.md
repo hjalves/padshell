@@ -11,33 +11,47 @@ copying to the console.
 
 ## Screen
 
-The editor shows the document with an underline cursor at the end, and a
-status line. While a character is being selected it appears at the cursor and
-the status line shows its cycle. Otherwise the status line shows the button
-groups, or the alternate commands while a trigger is held. The panel on the
-right is a controller diagram that lights up the buttons being pressed.
+The editor shows the document with a cursor at the end. While a character is
+being selected it appears at the cursor and its group shows the cycle. Every
+style also shows the eight button groups (or, while a trigger is held, the
+symbol groups or edit commands), lights up the buttons being pressed, and
+indicates the current mode.
 
 ## Styles
 
-Seven looks ("skins"), picked in the − app menu: highlight *style* and press
+Eight looks ("skins"), picked in the − app menu: highlight *style* and press
 A, or D-pad left/right, to cycle while the menu stays open as a preview. The
 choice is saved in `settings.ini` next to the notes.
 
 ![All styles](docs/styles.png)
 
+Flat, typographic (Metro family):
+
 | Style | Look |
 |---|---|
 | **metro** (default) | 10-foot TV layout. Black canvas, big light heading, flat colour tiles in controller order, per-mode palettes, TV-safe margins. |
-| **classic** | Dense desktop-editor layout with line numbers, a status line and a controller diagram. |
-| **terminal** | Green-phosphor CRT. VT323 type, numbered lines, block cursor, `[key]` keymap with inverse video, vim-style mode line, scanlines and vignette. |
-| **paper** | A typewritten page on a walnut desk. Courier Prime on ruled paper with a red margin, round typewriter keycaps, rubber-stamp mode indicators. |
-| **orbit** | Neon sci-fi. Starfield, bracketed document panel, and the groups on two rings shaped like the D-pad and the face buttons around a glowing mode core. |
-| **arcade** | Real low resolution: drawn at 320x180 with the Press Start 2P pixel font and a PICO-8-style palette, then scaled 4x with no smoothing. |
-| **aurora** | Soft and modern. Drifting gradient backdrop, frosted-glass cards, Quicksand type, and a floating dock tinted by mode. |
+| **zune** | Zune HD / Windows Phone hub. A giant cropped heading bleeding off the edge, modes as pivot headers, the groups as pure type with no boxes. |
+| **tiles** | Windows 8 Start screen. Document on the left, groups as square live tiles in two 2x2 blocks (each diamond turned 45°: up/X top-left, right/A top-right, left/Y bottom-left, down/B bottom-right), wide mode tiles, charms-style menu. |
+| **swiss** | International Typographic Style. Light paper, heavy black sans, ruled grid cells, a single red accent, the mode set vertically in the margin. |
 
-Each skin is one file in `src/skins/`. Skins receive a read-only view of the
-shell and editor state (`src/skin.h`) and draw everything themselves, so a
-new look needs no changes to the editor or input code.
+Pixel art (drawn at 320x180, scaled 4x with no smoothing):
+
+| Style | Look |
+|---|---|
+| **arcade** | Press Start 2P and a PICO-8-style palette, bevelled colour keys. |
+| **gameboy** | The original 4-shade green LCD, RPG window boxes, inverse video, a dot-matrix pixel grid; the cursor shape shows the mode. |
+| **synthwave** | 80s neon sunset: gradient sky, striped sun, a scrolling perspective grid, neon-outlined keys. |
+
+And:
+
+| Style | Look |
+|---|---|
+| **xmb** | Inspired by the XrossMediaBar. A colour wash that changes with the month, waving translucent ribbons, the groups as a horizontal icon row that glides to keep the active one in place, its characters as a vertical list beneath (earlier ones scroll above the row), and a slide-in options panel. |
+
+Each skin is one file in `src/skins/` (pixel skins share `pixel.h`). Skins
+receive a read-only view of the shell and editor state (`src/skin.h`) and draw
+everything themselves, so a new look needs no changes to the editor or input
+code.
 
 ## Controls
 
@@ -149,14 +163,14 @@ src/
   multitap.*        multi-tap text entry (pure logic, unit tested)
   textbuffer.*      editable UTF-8 text
   gfx.*             drawing helpers, cached monospace glyphs
-  shell.*           header/top bar, controller diagram, launcher, app switching
+  shell.*           app launcher and app switching (drawing is done by skins)
   skin.*            skin interface, registry and shared helpers
   skins/            one file per visual style
   app.h             interface every app implements
   apps/editor.*     the text editor
 tests/              host-only unit tests
-romfs/              bundled fonts (DejaVu; Courier Prime, VT323, Press Start 2P,
-                    Orbitron, Quicksand under the SIL OFL, licences alongside)
+romfs/              bundled fonts (DejaVu; Press Start 2P under the SIL OFL,
+                    licences alongside)
 tools/              build script, xdotool typing helper for desktop testing
 ```
 

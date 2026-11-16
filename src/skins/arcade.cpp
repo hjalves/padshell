@@ -5,12 +5,12 @@
 #include <cctype>
 #include <cstring>
 
-#include "../skin.h"
+#include "pixel.h"
 
 namespace {
 using namespace skins;
 
-constexpr int LW = 320, LH = 180, kScale = Gfx::W / LW;
+constexpr int LW = 320, LH = 180;
 constexpr Color black{0, 0, 0}, navy{29, 43, 83}, plum{126, 37, 83}, forest{0, 135, 81};
 constexpr Color brown{171, 82, 54}, slate{95, 87, 79}, silver{194, 195, 199}, white{255, 241, 232};
 constexpr Color red{255, 0, 77}, orange{255, 163, 0}, yellow{255, 236, 39}, green{0, 228, 54};
@@ -38,23 +38,13 @@ Color keyColor(MultiTap::Mode m, Btn b) {
     return slate;
 }
 
-std::string upper(std::string s) {
-    for (char& c : s) c = (char)std::toupper((unsigned char)c);
-    return s;
-}
-
-bool blinkOn() { return (SDL_GetTicks() / 400) % 2 == 0; }
-
-class Arcade : public Skin {
+class Arcade : public PixelSkin {
 public:
+    Arcade() : PixelSkin(LW, LH) {}
     const char* name() const override { return "arcade"; }
 
     Rect frame(Gfx& g, const ShellView& v) override {
-        if (!target_) {
-            target_ = SDL_CreateTexture(g.sdl(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, LW, LH);
-            SDL_SetTextureScaleMode(target_, SDL_ScaleModeNearest);
-        }
-        SDL_SetRenderTarget(g.sdl(), target_);
+        begin(g);
         g.clear(navy);
         Font& f = font(g);
         shadowText(g, 6, 5, upper(v.heading), yellow);
@@ -124,19 +114,7 @@ public:
         g.printCentered(f, box.x + w / 2, box.y + h - 12, hint, silver);
     }
 
-    void finish(Gfx& g) override {
-        SDL_SetRenderTarget(g.sdl(), nullptr);
-        SDL_Rect dst{0, 0, LW * kScale, LH * kScale};
-        SDL_RenderCopy(g.sdl(), target_, nullptr, &dst);
-    }
-
 private:
-    static Font& font(Gfx& g) { return g.font("PressStart2P.ttf", 8, true); }
-
-    static std::string pad3(size_t n) {
-        std::string s = std::to_string(std::min<size_t>(n, 999));
-        return std::string(3 - s.size(), '0') + s;
-    }
 
     void shadowText(Gfx& g, int x, int y, const std::string& s, Color c) {
         g.print(font(g), x + 1, y + 1, s, black);
@@ -164,9 +142,7 @@ private:
             g.fill({x, y + h - 1, w, 1}, mix(c, black, 0.4f));
             g.fill({x + w - 1, y, 1, h}, mix(c, black, 0.4f));
         }
-        const char* lab = b == DUp ? "\xE2\x86\x91" : b == DDown ? "\xE2\x86\x93" : b == DLeft ? "\xE2\x86\x90"
-                        : b == DRight ? "\xE2\x86\x92" : btnLabel(b);
-        g.print(f, x + 2, y + 2, lab, withAlpha(white, 200));
+        g.print(f, x + 2, y + 2, keyGlyph(b), withAlpha(white, 200));
 
         if (v.mode() == MultiTap::Mode::Commands) {
             if (const auto* cmd = commandFor(b)) {
@@ -186,8 +162,6 @@ private:
             g.print(f, lx, ly, tap.display(grp->chars[k]), k == cur ? black : white);
         }
     }
-
-    SDL_Texture* target_ = nullptr;
 };
 }  // namespace
 

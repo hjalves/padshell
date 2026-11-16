@@ -25,13 +25,14 @@ add_executable(padshell
   src/shell.cpp
   src/textbuffer.cpp
   src/skin.cpp
-  src/skins/classic.cpp
   src/skins/metro.cpp
-  src/skins/terminal.cpp
-  src/skins/paper.cpp
-  src/skins/orbit.cpp
   src/skins/arcade.cpp
-  src/skins/aurora.cpp
+  src/skins/zune.cpp
+  src/skins/tiles.cpp
+  src/skins/swiss.cpp
+  src/skins/gameboy.cpp
+  src/skins/synthwave.cpp
+  src/skins/xmb.cpp
   src/apps/editor.cpp
 )
 target_compile_options(padshell PRIVATE -Wall -Wextra)
