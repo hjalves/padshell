@@ -125,10 +125,10 @@ inline const Palette rose{{10, 0, 4}, {36, 8, 20}, {70, 18, 40}, {215, 165, 185}
     {{110, 255, 70}, {255, 30, 30}, {50, 180, 255}, {255, 215, 0}, {255, 140, 40}, {200, 100, 255}, {0, 235, 200}, {255, 90, 200}},
     {{255, 140, 180}, {255, 215, 0}, {255, 90, 200}, {110, 255, 70}, {50, 180, 255}, {210, 130, 255}}, false};
 
-// Lunar: deep blue-black with a white accent (brand, cursor, menu, mode
-// tag), pure white text, bright greys and saturated cool button and text
-// colours (all >= 6.4:1, greys 10.9:1).
-inline const Palette moon{{1, 2, 7}, {18, 22, 36}, {40, 48, 74}, {178, 188, 208}, {255, 255, 255}, {1, 2, 7},
+// Lunar: pure black with a white accent (brand, cursor, menu, mode tag),
+// pure white text, neutral greys and saturated cool button and text colours
+// (all >= 6.4:1 on the black).
+inline const Palette moon{{0, 0, 0}, {22, 22, 24}, {46, 46, 50}, {185, 187, 194}, {255, 255, 255}, {0, 0, 0},
     {255, 255, 255}, {40, 240, 135}, {255, 75, 100}, {255, 232, 50},
     {{40, 240, 135}, {255, 75, 100}, {60, 175, 255}, {255, 232, 50}, {255, 145, 30}, {165, 130, 255}, {30, 235, 225}, {255, 85, 225}},
     {{110, 225, 255}, {255, 232, 50}, {255, 85, 225}, {40, 240, 135}, {60, 175, 255}, {175, 145, 255}}, false};
