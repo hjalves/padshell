@@ -37,7 +37,8 @@ the notes (`theme=sunset`, `font=space-mono`).
 | **rose** | Pink-black, rose accent |
 | **ember** | Warm dark brown, coral and amber |
 | **midnight** | Violet-black, pink accent (the original ameno colours) |
-| **moon** | Monochrome: near-black with white and grey accents; buttons, modes and character kinds differ by shade |
+| **moon** | Cool blue-black with a white accent; softer, cool button and text colours |
+| **grayscale** | Monochrome: near-black with white and grey accents; buttons, modes and character kinds differ by shade |
 | **ocean** | Deep navy, cyan accent |
 | **carbon** | Neutral black, IBM blue |
 | **neon** | Pure black, electric magenta, lime and cyan |
