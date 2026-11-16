@@ -125,12 +125,13 @@ inline const Palette rose{{10, 0, 4}, {36, 8, 20}, {70, 18, 40}, {215, 165, 185}
     {{110, 255, 70}, {255, 30, 30}, {50, 180, 255}, {255, 215, 0}, {255, 140, 40}, {200, 100, 255}, {0, 235, 200}, {255, 90, 200}},
     {{255, 140, 180}, {255, 215, 0}, {255, 90, 200}, {110, 255, 70}, {50, 180, 255}, {210, 130, 255}}, false};
 
-// Lunar: cool blue-black with a white accent (brand, cursor, menu, mode
-// tag) and softened, cool versions of the usual button and text colours.
-inline const Palette moon{{5, 7, 14}, {22, 26, 40}, {44, 52, 78}, {150, 160, 180}, {232, 236, 246}, {5, 7, 14},
-    {255, 255, 255}, {80, 230, 140}, {255, 80, 100}, {255, 225, 100},
-    {{80, 230, 140}, {255, 80, 100}, {80, 175, 255}, {255, 225, 100}, {255, 155, 70}, {165, 135, 255}, {70, 225, 220}, {245, 115, 220}},
-    {{130, 220, 245}, {255, 225, 100}, {245, 115, 220}, {80, 230, 140}, {80, 175, 255}, {180, 155, 255}}, false};
+// Lunar: deep blue-black with a white accent (brand, cursor, menu, mode
+// tag), pure white text, bright greys and saturated cool button and text
+// colours (all >= 6.4:1, greys 10.9:1).
+inline const Palette moon{{1, 2, 7}, {18, 22, 36}, {40, 48, 74}, {178, 188, 208}, {255, 255, 255}, {1, 2, 7},
+    {255, 255, 255}, {40, 240, 135}, {255, 75, 100}, {255, 232, 50},
+    {{40, 240, 135}, {255, 75, 100}, {60, 175, 255}, {255, 232, 50}, {255, 145, 30}, {165, 130, 255}, {30, 235, 225}, {255, 85, 225}},
+    {{110, 225, 255}, {255, 232, 50}, {255, 85, 225}, {40, 240, 135}, {60, 175, 255}, {175, 145, 255}}, false};
 
 // Monochrome: near-black with white and grey accents. Buttons, modes and
 // character kinds differ by shade only (badges carry their labels and the
