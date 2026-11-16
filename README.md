@@ -33,6 +33,11 @@ notes.
 | **ameno-ocean** | ameno in deep navy with a cyan accent, JetBrains Mono. |
 | **ameno-carbon** | ameno in neutral near-black with IBM blue (Carbon-like colours), IBM Plex Mono. |
 | **ameno-neon** | ameno on pure black with electric magenta, lime and cyan, Fira Mono. |
+| **ameno-neon-space** | neon's palette with Space Mono. |
+| **ameno-cyber** | Pure black, electric cyan accent with yellow and magenta, Space Mono. |
+| **ameno-vapor** | Violet-black, hot pink accent, softer vaporwave neons, Space Mono. |
+| **ameno-sunset** | Pure black, hot orange accent with magenta and lime, Space Mono. |
+| **ameno-ice** | Blue-black, electric periwinkle accent with cyan and mint, Space Mono. |
 | **ameno-ember** | ameno in warm dark brown with coral and amber, Space Mono. |
 | **ameno-day** | ameno as a light paper theme with darkened ink colours for text, Courier Prime. |
 | **light** | A daytime light theme: metro's tile strip where every tile keeps its button's own colour in all modes; the mode shows in the cursor and tags, and a bar on the pending tile counts down to the commit. |

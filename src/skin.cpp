@@ -42,6 +42,11 @@ Skin* makeAmeno();
 Skin* makeAmenoOcean();
 Skin* makeAmenoCarbon();
 Skin* makeAmenoNeon();
+Skin* makeAmenoNeonSpace();
+Skin* makeAmenoCyber();
+Skin* makeAmenoVapor();
+Skin* makeAmenoSunset();
+Skin* makeAmenoIce();
 Skin* makeAmenoEmber();
 Skin* makeAmenoDay();
 Skin* makeLight();
@@ -54,9 +59,11 @@ std::string g_path;
 }  // namespace
 
 const std::vector<Skin*>& all() {
-    static const std::vector<Skin*> list = {makeMetro(),      makeAmeno(),      makeAmenoOcean(),
-                                            makeAmenoCarbon(), makeAmenoNeon(),  makeAmenoEmber(),
-                                            makeAmenoDay(),    makeLight(),      makeFocus()};
+    static const std::vector<Skin*> list = {
+        makeMetro(),        makeAmeno(),       makeAmenoOcean(), makeAmenoCarbon(),
+        makeAmenoNeon(),    makeAmenoNeonSpace(), makeAmenoCyber(), makeAmenoVapor(),
+        makeAmenoSunset(),  makeAmenoIce(),    makeAmenoEmber(), makeAmenoDay(),
+        makeLight(),        makeFocus()};
     return list;
 }
 
