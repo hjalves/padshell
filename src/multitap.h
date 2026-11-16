@@ -43,6 +43,8 @@ public:
 
     Mode mode() const { return mode_; }
     bool uppercase() const { return upper_; }
+    // When the pending character's one-second commit timer last restarted.
+    uint32_t lastInput() const { return lastInput_; }
     bool hasPending() const { return pending_ != 0; }
     // The pending character as it would be committed (case applied).
     std::string pendingText() const;

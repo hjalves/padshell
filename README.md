@@ -19,39 +19,36 @@ indicates the current mode.
 
 ## Styles
 
-Eight looks ("skins"), picked in the − app menu: highlight *style* and press
-A, or D-pad left/right, to cycle while the menu stays open as a preview. The
-choice is saved in `settings.ini` next to the notes.
+Six variations on one Metro-style design, picked in the − app menu:
+highlight *style* and press A, or D-pad left/right, to cycle while the menu
+stays open as a preview. The choice is saved in `settings.ini` next to the
+notes.
 
 ![All styles](docs/styles.png)
 
-Flat, typographic (Metro family):
-
 | Style | Look |
 |---|---|
-| **metro** (default) | 10-foot TV layout. Black canvas, big light heading, flat colour tiles in controller order, per-mode palettes, TV-safe margins. |
-| **zune** | Zune HD / Windows Phone hub. A giant cropped heading bleeding off the edge, modes as pivot headers, the groups as pure type with no boxes. |
-| **tiles** | Windows 8 Start screen. Document on the left, groups as square live tiles in two 2x2 blocks (each diamond turned 45°: up/X top-left, right/A top-right, left/Y bottom-left, down/B bottom-right), wide mode tiles, charms-style menu. |
-| **swiss** | International Typographic Style. Light paper, heavy black sans, ruled grid cells, a single red accent, the mode set vertically in the margin. |
+| **metro** (default) | Black canvas, big light heading, flat colour tiles in controller order with per-mode palettes, TV-safe margins. |
+| **ameno** | After the ameno TV web app: slim top bar (brand, counts, small controller diagram, clock), large document, and a status line of flat button badges with their groups, the pending character's cycle, mode tags and a commit timer. |
+| **keys** | Metro's layout where every tile keeps its button's own colour in all modes; the mode shows in the cursor and tags, and a bar on the pending tile counts down to the commit. |
+| **light** | The same as keys in a light, daytime theme. |
+| **focus** | Distraction-free: a quiet top line and a large centred column of text. The status line stays muted while you write and comes up in colour when you act; the commit timer sits under the pending character. |
+| **cross** | Tiles arranged like the controller: a D-pad cross on the left and a face-button diamond on the right, with the mode tags, the cycle and its timer between them. |
 
-Pixel art (drawn at 320x180, scaled 4x with no smoothing):
+All but metro share the ameno conventions (`src/skins/family.h`):
 
-| Style | Look |
-|---|---|
-| **arcade** | Press Start 2P and a PICO-8-style palette, bevelled colour keys. |
-| **gameboy** | The original 4-shade green LCD, RPG window boxes, inverse video, a dot-matrix pixel grid; the cursor shape shows the mode. |
-| **synthwave** | 80s neon sunset: gradient sky, striped sun, a scrolling perspective grid, neon-outlined keys. |
+* **Button colours.** Each button position has its own colour wherever it
+  appears: bottom green, right red, left blue, top yellow (Xbox A, B, X, Y;
+  on a Switch controller B, A, Y, X), D-pad down orange, left violet, up
+  teal, right magenta.
+* **Character colours.** In the document, capitals are teal, digits yellow,
+  brackets magenta, quotes green, operators blue, other punctuation violet.
+* **Mode colours.** Cursor and mode tag: pink for letters, green while ZL is
+  held, red while ZR is held. The "ABC" tag lights up in yellow for caps.
 
-And:
-
-| Style | Look |
-|---|---|
-| **xmb** | Inspired by the XrossMediaBar. A colour wash that changes with the month, waving translucent ribbons, the groups as a horizontal icon row that glides to keep the active one in place, its characters as a vertical list beneath (earlier ones scroll above the row), and a slide-in options panel. |
-
-Each skin is one file in `src/skins/` (pixel skins share `pixel.h`). Skins
-receive a read-only view of the shell and editor state (`src/skin.h`) and draw
-everything themselves, so a new look needs no changes to the editor or input
-code.
+Each skin is one file in `src/skins/`. Skins receive a read-only view of the
+shell and editor state (`src/skin.h`) and draw everything themselves, so a
+new look needs no changes to the editor or input code.
 
 ## Controls
 
@@ -169,8 +166,7 @@ src/
   app.h             interface every app implements
   apps/editor.*     the text editor
 tests/              host-only unit tests
-romfs/              bundled fonts (DejaVu; Press Start 2P under the SIL OFL,
-                    licences alongside)
+romfs/              bundled DejaVu fonts (licence alongside)
 tools/              build script, xdotool typing helper for desktop testing
 ```
 
