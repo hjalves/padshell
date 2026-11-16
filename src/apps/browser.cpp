@@ -137,6 +137,10 @@ void BrowserApp::startFetch(const gem::Url& url) {
 void BrowserApp::onResponse(gem::Response r) {
     using E = gem::Response::Error;
     const gem::Url url = gem::Url::parse(loadingUrl_);
+    // One line per response; visible with `nxlink -s` on the Switch.
+    SDL_Log("gemini: %s -> %s (%u ms)", loadingUrl_.c_str(),
+            r.error != E::None ? r.errorText.c_str() : statusText(r.status, r.meta).c_str(),
+            (unsigned)(SDL_GetTicks() - loadStart_));
     if (r.error != E::None) {
         if (r.error == E::Cancelled) return;
         if (r.error == E::CertChanged) {

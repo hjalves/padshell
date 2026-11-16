@@ -34,19 +34,26 @@ Response fetch(const Url& url, const std::string& knownHostsPath, std::atomic<in
 // Replaces the remembered certificate for host:port.
 void trustCertificate(const std::string& knownHostsPath, const std::string& hostPort, const std::string& fingerprint);
 
-// One request at a time in a background thread. start() abandons any
-// request still running (its result is discarded).
+// Runs requests on one long-lived worker thread, one at a time, so network
+// calls never overlap and no thread is created per request. start()
+// replaces whatever is queued and abandons the request in flight (its
+// result is discarded).
 class Fetcher {
 public:
-    struct Job;  // shared with the worker thread
-    ~Fetcher() { cancel(); }
+    Fetcher();
+    ~Fetcher();
+    Fetcher(const Fetcher&) = delete;
+    Fetcher& operator=(const Fetcher&) = delete;
+
     void start(const Url& url, const std::string& knownHostsPath);
-    bool busy() const { return job_ != nullptr; }
+    bool busy() const;
     std::optional<Response> poll();  // the result, once, when done
     void cancel();
 
+    struct Shared;  // state shared with the worker thread
+
 private:
-    std::shared_ptr<Job> job_;
+    std::shared_ptr<Shared> s_;
 };
 
 }  // namespace gem

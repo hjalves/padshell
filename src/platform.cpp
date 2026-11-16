@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 
 #include <algorithm>
+#include <csignal>
 #include <cmath>
 #include <cstdlib>
 #include <vector>
@@ -74,6 +75,9 @@ void init() {
         dumpLatestReport("sdmc:/atmosphere/crash_reports");
     }
 #else
+    // Writing to a socket the peer (or a cancel) closed must fail with EPIPE,
+    // not kill the process.
+    std::signal(SIGPIPE, SIG_IGN);
     // Positional face buttons on desktop too, even for Nintendo-layout pads.
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
 #endif

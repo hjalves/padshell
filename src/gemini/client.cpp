@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <condition_variable>
 #include <mutex>
 #include <sstream>
 #include <vector>
@@ -69,7 +70,11 @@ void writeFingerprint(const std::string& path, const std::string& hostPort, cons
 
 int sendCb(void* ctx, const unsigned char* buf, size_t len) {
     int fd = *static_cast<int*>(ctx);
+#ifdef MSG_NOSIGNAL
+    ssize_t n = ::send(fd, buf, len, MSG_NOSIGNAL);  // a cancelled socket must not raise SIGPIPE
+#else
     ssize_t n = ::send(fd, buf, len, 0);
+#endif
     if (n >= 0) return (int)n;
     if (errno == EAGAIN || errno == EWOULDBLOCK) return MBEDTLS_ERR_SSL_TIMEOUT;
     return MBEDTLS_ERR_NET_SEND_FAILED;
@@ -199,12 +204,12 @@ Response fetch(const Url& url, const std::string& knownHosts, std::atomic<int>* 
 
     // Response: "<status> <meta>\r\n" then the body until the server closes.
     std::string data;
-    unsigned char buf[16384];
+    std::vector<unsigned char> buf(16384);  // on the heap: worker stacks are precious
     for (;;) {
-        ret = mbedtls_ssl_read(&tls.ssl, buf, sizeof buf);
+        ret = mbedtls_ssl_read(&tls.ssl, buf.data(), buf.size());
         if (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE) continue;
         if (ret > 0) {
-            data.append((const char*)buf, ret);
+            data.append((const char*)buf.data(), ret);
             if (data.size() > kMaxBody) return fail(Response::Error::TooLarge, "The page is larger than 8 MB.");
             continue;
         }
@@ -228,62 +233,118 @@ Response fetch(const Url& url, const std::string& knownHosts, std::atomic<int>* 
 }
 
 // --- Fetcher ------------------------------------------------------------------
+//
+// One worker thread for the Fetcher's lifetime. Requests carry a generation
+// number; cancelling or starting a new request bumps it, so a result that
+// arrives late for an abandoned request is dropped.
 
-struct Fetcher::Job {
-    Url url;
-    std::string knownHosts;
+struct Fetcher::Shared {
+    std::mutex m;
+    std::condition_variable cv;
+    bool quit = false;
+    // Queued request (at most one; a newer start() replaces it).
+    bool hasPending = false;
+    Url pendingUrl;
+    std::string pendingKnownHosts;
+    uint64_t pendingGen = 0;
+    // The request in flight.
     std::atomic<bool> cancelled{false};
-    std::atomic<bool> done{false};
     std::atomic<int> fd{-1};
+    // The newest wanted generation, and the finished result (if any).
+    uint64_t wanted = 0;
+    bool hasResult = false;
+    uint64_t resultGen = 0;
     Response result;
 };
 
 namespace {
-void* runJob(void* arg) {
-    auto* holder = static_cast<std::shared_ptr<Fetcher::Job>*>(arg);
-    std::shared_ptr<Fetcher::Job> job = *holder;
+void* worker(void* arg) {
+    auto* holder = static_cast<std::shared_ptr<Fetcher::Shared>*>(arg);
+    std::shared_ptr<Fetcher::Shared> s = *holder;
     delete holder;
-    job->result = fetch(job->url, job->knownHosts, &job->fd, &job->cancelled);
-    job->done.store(true);
-    return nullptr;
+    for (;;) {
+        Url url;
+        std::string known;
+        uint64_t gen;
+        {
+            std::unique_lock<std::mutex> lock(s->m);
+            s->cv.wait(lock, [&] { return s->quit || s->hasPending; });
+            if (s->quit) return nullptr;
+            url = s->pendingUrl;
+            known = s->pendingKnownHosts;
+            gen = s->pendingGen;
+            s->hasPending = false;
+            s->cancelled.store(false);
+        }
+        Response r = fetch(url, known, &s->fd, &s->cancelled);
+        std::lock_guard<std::mutex> lock(s->m);
+        if (gen == s->wanted) {
+            s->result = std::move(r);
+            s->resultGen = gen;
+            s->hasResult = true;
+        }
+    }
 }
 }  // namespace
 
-void Fetcher::start(const Url& url, const std::string& knownHostsPath) {
-    cancel();
-    job_ = std::make_shared<Job>();
-    job_->url = url;
-    job_->knownHosts = knownHostsPath;
-    // A detached thread with a generous stack (TLS handshakes use a lot);
-    // it keeps the job alive through its own shared_ptr.
+Fetcher::Fetcher() : s_(std::make_shared<Shared>()) {
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-    pthread_attr_setstacksize(&attr, 512 * 1024);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_attr_setstacksize(&attr, 512 * 1024);  // TLS handshakes use plenty of stack
     pthread_t thread;
-    auto* holder = new std::shared_ptr<Job>(job_);
-    if (pthread_create(&thread, &attr, runJob, holder) != 0) {
+    auto* holder = new std::shared_ptr<Shared>(s_);
+    if (pthread_create(&thread, &attr, worker, holder) == 0) {
+        pthread_detach(thread);  // libsysbase ignores the attr's detach state
+    } else {
         delete holder;
-        job_->result.error = Response::Error::Connect;
-        job_->result.errorText = "Could not start the network thread.";
-        job_->done.store(true);
+        s_.reset();
     }
     pthread_attr_destroy(&attr);
 }
 
+Fetcher::~Fetcher() {
+    if (!s_) return;
+    cancel();
+    std::lock_guard<std::mutex> lock(s_->m);
+    s_->quit = true;
+    s_->cv.notify_all();
+    // The worker owns a reference to the shared state and exits on its own.
+}
+
+void Fetcher::start(const Url& url, const std::string& knownHostsPath) {
+    if (!s_) return;
+    cancel();
+    std::lock_guard<std::mutex> lock(s_->m);
+    s_->pendingUrl = url;
+    s_->pendingKnownHosts = knownHostsPath;
+    s_->pendingGen = ++s_->wanted;
+    s_->hasPending = true;
+    s_->cv.notify_all();
+}
+
+bool Fetcher::busy() const {
+    if (!s_) return false;
+    std::lock_guard<std::mutex> lock(s_->m);
+    return s_->hasPending || (!s_->hasResult && s_->resultGen != s_->wanted && s_->wanted != 0);
+}
+
 std::optional<Response> Fetcher::poll() {
-    if (!job_ || !job_->done.load()) return std::nullopt;
-    Response r = std::move(job_->result);
-    job_.reset();
-    return r;
+    if (!s_) return std::nullopt;
+    std::lock_guard<std::mutex> lock(s_->m);
+    if (!s_->hasResult || s_->resultGen != s_->wanted) return std::nullopt;
+    s_->hasResult = false;
+    return std::move(s_->result);
 }
 
 void Fetcher::cancel() {
-    if (!job_) return;
-    job_->cancelled.store(true);
-    int fd = job_->fd.load();
-    if (fd >= 0) ::shutdown(fd, SHUT_RDWR);  // unblocks recv/connect in the worker
-    job_.reset();                             // the worker keeps its own reference
+    if (!s_) return;
+    std::lock_guard<std::mutex> lock(s_->m);
+    s_->hasPending = false;
+    s_->hasResult = false;
+    s_->resultGen = ++s_->wanted;  // nothing in flight is wanted any more
+    s_->cancelled.store(true);
+    int fd = s_->fd.load();
+    if (fd >= 0) ::shutdown(fd, SHUT_RDWR);  // unblocks connect/recv in the worker
 }
 
 }  // namespace gem
