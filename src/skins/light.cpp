@@ -21,7 +21,7 @@ public:
         const int tileH = 116, rowH = 34;
         Rect strip{a.x, a.y + a.h - tileH, a.w, tileH};
         const int rowY = strip.y - rowH - 18;
-        Font& f = g.font("DejaVuSansMono.ttf", 34);
+        Font& f = g.font(p_.mono, 34);
         document(g, {a.x, a.y, a.w, rowY - 20 - a.y}, v, p_, {&f, f.lineH() + 2, 6});
         if (v.empty() && !v.tap->hasPending())
             g.draw(g.font("DejaVuSans-ExtraLight.ttf", 40), a.x + f.cellW() + 14, a.y - 4, "start typing", p_.muted);
@@ -30,7 +30,7 @@ public:
         std::string info = std::to_string(v.lineCount()) + (v.lineCount() == 1 ? " line" : " lines") + "  \xC2\xB7  " +
                            std::to_string(v.chars()) + " chars" + (v.modified ? "  \xC2\xB7  unsaved" : "");
         g.draw(s, a.x, rowY + (rowH - s.lineH()) / 2, info, p_.muted);
-        int tw = modeTags(g, a.x + a.w, rowY, rowH, g.font("DejaVuSansMono-Bold.ttf", 18), v, p_);
+        int tw = modeTags(g, a.x + a.w, rowY, rowH, g.font(p_.bold, 18), v, p_);
         std::string hints = std::string(btnLabel(ZL)) + " symbols   " + btnLabel(ZR) + " edit   " + btnLabel(L) +
                             " caps   + menu   - apps";
         g.draw(s, a.x + a.w - tw - 30 - Gfx::measure(s, hints), rowY + (rowH - s.lineH()) / 2, hints, p_.muted);
@@ -49,15 +49,15 @@ private:
         const MultiTap& tap = *v.tap;
         const bool commands = v.mode() == MultiTap::Mode::Commands;
         const Btn pend = pendingButton(v);
-        Font& mf = g.font("DejaVuSansMono.ttf", 30);
-        Font& lf = g.font("DejaVuSansMono-Bold.ttf", 17);
+        Font& mf = g.font(p_.mono, 30);
+        Font& lf = g.font(p_.bold, 17);
         for (int i = 0; i < 8; ++i) {
             const Btn b = kTileOrder[i];
             Rect t{strip.x + i * (tileW + gap) + (i >= 4 ? groupGap - gap : 0), strip.y, tileW, strip.h};
             const auto* cmd = commands ? commandFor(b) : nullptr;
             const auto* grp = commands ? nullptr : groupFor(v.mode(), b);
             const bool live = cmd || grp;
-            Color c = live ? buttonColor(b, p_.light) : p_.surface;
+            Color c = live ? buttonColor(b, p_) : p_.surface;
             const bool held = v.held & b;
             g.fill(t, held ? mix(c, p_.light ? Color{0, 0, 0} : Color{255, 255, 255}, 0.3f) : c);
             const Color fg = live ? p_.dark : p_.muted;
@@ -96,4 +96,4 @@ private:
 };
 }  // namespace
 
-Skin* makeLight() { static Keys s("light", lightPalette()); return &s; }
+Skin* makeLight() { static Keys s("light", themes::daylight); return &s; }

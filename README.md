@@ -19,7 +19,7 @@ indicates the current mode.
 
 ## Styles
 
-Four variations on one Metro-style design, picked in the − app menu:
+Variations on one Metro-style design, picked in the − app menu:
 highlight *style* and press A, or D-pad left/right, to cycle while the menu
 stays open as a preview. The choice is saved in `settings.ini` next to the
 notes.
@@ -29,14 +29,22 @@ notes.
 | Style | Look |
 |---|---|
 | **metro** (default) | Black canvas, big light heading, flat colour tiles in controller order with per-mode palettes, TV-safe margins. |
-| **ameno** | After the ameno TV web app: slim top bar (brand, counts, clock), large document, and a status line of flat button badges with their groups, the pending character's cycle, mode tags and a commit timer. |
+| **ameno** | After the ameno TV web app: slim top bar (brand, counts, clock), large document, and a status line of flat button badges with their groups, the pending character's cycle, mode tags and a commit timer. Midnight palette, DejaVu Sans Mono. |
+| **ameno-ocean** | ameno in deep navy with a cyan accent, JetBrains Mono. |
+| **ameno-carbon** | ameno in neutral near-black with IBM blue (Carbon-like colours), IBM Plex Mono. |
+| **ameno-neon** | ameno on pure black with electric magenta, lime and cyan, Fira Mono. |
+| **ameno-ember** | ameno in warm dark brown with coral and amber, Space Mono. |
+| **ameno-day** | ameno as a light paper theme with darkened ink colours for text, Courier Prime. |
 | **light** | A daytime light theme: metro's tile strip where every tile keeps its button's own colour in all modes; the mode shows in the cursor and tags, and a bar on the pending tile counts down to the commit. |
 | **focus** | Distraction-free: a quiet top line and a large centred column of text. The status line stays muted while you write and comes up in colour when you act; the commit timer sits under the pending character. |
 
 All but metro share the ameno conventions (`src/skins/family.h`):
 
-* **Vivid palette.** Near-black background, fully saturated accents and
-  greys at 6.8:1 contrast or better, so colours hold up on cheap TV panels.
+* **Vivid palettes.** Each theme (`themes::` in `family.h`) is a palette
+  plus a monospaced font pair. Dark themes use near-black backgrounds,
+  saturated accents (at least 4.9:1 against the background and for dark
+  text on them) and greys at 6.8:1 or better, so they hold up on cheap TV
+  panels. In ameno themes the letters cursor/mode colour is the theme's accent.
 * **Button colours.** Each button position has its own colour wherever it
   appears: bottom green, right red, left blue, top yellow (Xbox A, B, X, Y;
   on a Switch controller B, A, Y, X), D-pad down orange, left violet, up
@@ -166,7 +174,9 @@ src/
   app.h             interface every app implements
   apps/editor.*     the text editor
 tests/              host-only unit tests
-romfs/              bundled DejaVu fonts (licence alongside)
+romfs/              bundled fonts: DejaVu, plus JetBrains Mono, IBM Plex Mono,
+                    Fira Mono, Space Mono and Courier Prime under the SIL OFL
+                    (licences alongside)
 tools/              build script, xdotool typing helper for desktop testing
 ```
 

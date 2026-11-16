@@ -9,7 +9,7 @@ namespace {
 using namespace fam;
 
 const Palette& P = darkPalette();
-const char* kMono = "DejaVuSansMono.ttf";
+const char* kMono = P.mono;
 
 class Focus : public Skin {
 public:
@@ -39,7 +39,7 @@ public:
             const int top = std::max(0, (int)rows.size() - 7);
             int cx = doc.x + (v.endColumn() % cols) * f.cellW();
             int cy = doc.y + ((int)rows.size() - 1 - top) * lh + lh + 4;
-            g.fill({cx, cy, (int)(f.cellW() * t), 3}, buttonColor(pendingButton(v)));
+            g.fill({cx, cy, (int)(f.cellW() * t), 3}, buttonColor(pendingButton(v), P));
         }
 
         const bool active = v.held || v.tap->hasPending() || v.mode() != MultiTap::Mode::Letters;
@@ -47,19 +47,19 @@ public:
         g.fill({a.x, y - 22, a.w, 1}, P.surface);
         if (v.tap->hasPending()) {
             Btn b = pendingButton(v);
-            badge(g, a.x, y - 4, 36, b, buttonColor(b), P.dark);
+            badge(g, a.x, y - 4, 36, b, buttonColor(b, P), P.dark, P.bold);
             cycle(g, a.x + 48, y - 4, 36, v, P);
         } else {
             groupsLine(g, a.x, y, s, g.font(kMono, 18), v, P, !active);
         }
-        Font& tf = g.font("DejaVuSansMono-Bold.ttf", 16);
+        Font& tf = g.font(P.bold, 16);
         if (active || v.tap->uppercase()) modeTags(g, a.x + a.w, y, s, tf, v, P);
         else g.draw(g.font(kMono, 16), a.x + a.w - 160, y + 5, v.modified ? "unsaved  + menu" : "+ menu", P.muted);
     }
 
     void menu(Gfx& g, const std::string& title, const std::vector<std::string>& items, int sel) override {
         g.fill({0, 0, Gfx::W, Gfx::H}, withAlpha(P.bg, 252));
-        Font& f = g.font(kMono, 34), &fb = g.font("DejaVuSansMono-Bold.ttf", 34);
+        Font& f = g.font(kMono, 34), &fb = g.font(P.bold, 34);
         const int lh = f.lineH() + 26, w = 520;
         int y = (Gfx::H - (int)items.size() * lh) / 2;
         g.drawCentered(g.font(kMono, 19), Gfx::W / 2, y - 50, title, P.muted);

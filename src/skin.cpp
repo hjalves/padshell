@@ -39,6 +39,11 @@ std::string_view EditorView::rowText(const WrapRow& r) const {
 // Defined in src/skins/*.cpp.
 Skin* makeMetro();
 Skin* makeAmeno();
+Skin* makeAmenoOcean();
+Skin* makeAmenoCarbon();
+Skin* makeAmenoNeon();
+Skin* makeAmenoEmber();
+Skin* makeAmenoDay();
 Skin* makeLight();
 Skin* makeFocus();
 
@@ -49,7 +54,9 @@ std::string g_path;
 }  // namespace
 
 const std::vector<Skin*>& all() {
-    static const std::vector<Skin*> list = {makeMetro(), makeAmeno(), makeLight(), makeFocus()};
+    static const std::vector<Skin*> list = {makeMetro(),      makeAmeno(),      makeAmenoOcean(),
+                                            makeAmenoCarbon(), makeAmenoNeon(),  makeAmenoEmber(),
+                                            makeAmenoDay(),    makeLight(),      makeFocus()};
     return list;
 }
 
