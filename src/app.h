@@ -13,12 +13,13 @@ class Shell;
 class App {
 public:
     virtual ~App() = default;
-    virtual std::string title() const = 0;   // shown in the top bar / launcher
-    virtual std::string heading() const { return title(); }  // short, for the Metro header
-    virtual void onEnter() {}                // became the foreground app
-    virtual void onLeave() {}                // backgrounded or shell quitting: save state here
+    virtual std::string title() const = 0;    // e.g. "Editor - notes.txt *"
+    virtual std::string heading() const = 0;  // short lowercase name, e.g. "notes"
+    virtual void onEnter() {}                 // became the foreground app
+    virtual void onLeave() {}                 // backgrounded or shell quitting: save state here
     virtual void update(const Gamepad& pad, Shell& shell) = 0;
+    // Draw into `area`, normally by handing a view of the app to the skin.
     virtual void render(Gfx& g, Rect area) = 0;
-    // Short hints shown under the controller diagram.
+    // Short hints some skins show next to the controller.
     virtual std::vector<std::string> help() const { return {}; }
 };

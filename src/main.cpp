@@ -8,7 +8,7 @@
 #include "pad.h"
 #include "platform.h"
 #include "shell.h"
-#include "ui.h"
+#include "skin.h"
 
 int main(int, char**) {
     platform::init();
@@ -31,7 +31,7 @@ int main(int, char**) {
     // Draw in 1280x720 coordinates regardless of the real window size.
     SDL_RenderSetLogicalSize(ren, Gfx::W, Gfx::H);
 
-    ui::loadSettings(platform::dataDir() + "settings.ini");
+    skins::loadSettings(platform::dataDir() + "settings.ini");
     Shell shell;
     shell.add(std::make_unique<EditorApp>(platform::dataDir() + "notes.txt"));
 

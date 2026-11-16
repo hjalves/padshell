@@ -22,23 +22,14 @@ public:
 
 private:
     void apply(const std::vector<TextEvent>& events);
+    void flush();
     bool save(Shell* shell);
     void updateMenu(const Gamepad& pad, Shell& shell);
-    void renderClassic(Gfx& g, Rect area);
-    void renderStatus(Gfx& g, Rect r);
-    void renderMenu(Gfx& g, Rect area);
-    void renderMetro(Gfx& g, Rect area);
-    void renderTiles(Gfx& g, Rect strip);
-
-    // Document split into visual rows of at most `cols` codepoints. The last
-    // line always gets room for the cursor cell.
-    struct Row { int line; size_t from, to; bool first; };
-    std::vector<Row> wrap(int cols) const;
 
     std::string path_;
     TextBuffer buf_;
     MultiTap tap_;
     bool menu_ = false;
     int menuSel_ = 0;
-    uint32_t lastHeld_ = 0;  // for lighting up pressed tiles
+    uint32_t held_ = 0;  // for skins that light up pressed buttons
 };

@@ -19,20 +19,25 @@ right is a controller diagram that lights up the buttons being pressed.
 
 ## Styles
 
-Pick a style in the − app menu (*Style*); the choice is saved in
-`settings.ini` next to the notes.
+Seven looks ("skins"), picked in the − app menu: highlight *style* and press
+A, or D-pad left/right, to cycle while the menu stays open as a preview. The
+choice is saved in `settings.ini` next to the notes.
 
-![Metro style](docs/metro.png)
+![All styles](docs/styles.png)
 
-* **Metro** (default): a 10-foot TV layout. Pure black canvas, a large light
-  lowercase heading, big type, and the eight character groups shown as flat
-  colour tiles laid out like the controller (D-pad left, face buttons
-  right). Tiles light up when pressed and show the character being selected.
-  Each mode has its own palette: letters are multicoloured, symbols green,
-  edit commands red. Chips above the tiles show ZL, ZR and uppercase.
-  Everything stays inside TV-safe margins.
-* **Classic**: the denser layout with line numbers, a status line and the
-  controller diagram.
+| Style | Look |
+|---|---|
+| **metro** (default) | 10-foot TV layout. Black canvas, big light heading, flat colour tiles in controller order, per-mode palettes, TV-safe margins. |
+| **classic** | Dense desktop-editor layout with line numbers, a status line and a controller diagram. |
+| **terminal** | Green-phosphor CRT. VT323 type, numbered lines, block cursor, `[key]` keymap with inverse video, vim-style mode line, scanlines and vignette. |
+| **paper** | A typewritten page on a walnut desk. Courier Prime on ruled paper with a red margin, round typewriter keycaps, rubber-stamp mode indicators. |
+| **orbit** | Neon sci-fi. Starfield, bracketed document panel, and the groups on two rings shaped like the D-pad and the face buttons around a glowing mode core. |
+| **arcade** | Real low resolution: drawn at 320x180 with the Press Start 2P pixel font and a PICO-8-style palette, then scaled 4x with no smoothing. |
+| **aurora** | Soft and modern. Drifting gradient backdrop, frosted-glass cards, Quicksand type, and a floating dock tinted by mode. |
+
+Each skin is one file in `src/skins/`. Skins receive a read-only view of the
+shell and editor state (`src/skin.h`) and draw everything themselves, so a
+new look needs no changes to the editor or input code.
 
 ## Controls
 
@@ -145,11 +150,13 @@ src/
   textbuffer.*      editable UTF-8 text
   gfx.*             drawing helpers, cached monospace glyphs
   shell.*           header/top bar, controller diagram, launcher, app switching
-  ui.*              style setting and the Metro palette / menu
+  skin.*            skin interface, registry and shared helpers
+  skins/            one file per visual style
   app.h             interface every app implements
   apps/editor.*     the text editor
 tests/              host-only unit tests
-romfs/              bundled assets (DejaVu fonts, see their licence)
+romfs/              bundled fonts (DejaVu; Courier Prime, VT323, Press Start 2P,
+                    Orbitron, Quicksand under the SIL OFL, licences alongside)
 tools/              build script, xdotool typing helper for desktop testing
 ```
 
