@@ -28,7 +28,7 @@ notes.
 
 | Style | Look |
 |---|---|
-| **metro** (default) | Black canvas, big light heading, flat colour tiles in controller order with per-mode palettes, TV-safe margins. |
+| **metro** | Black canvas, big light heading, flat colour tiles in controller order with per-mode palettes, TV-safe margins. |
 | **ameno** | After the ameno TV web app: slim top bar (brand, counts, clock), large document, and a status line of flat button badges with their groups, the pending character's cycle, mode tags and a commit timer. Midnight palette, DejaVu Sans Mono. |
 | **ameno-ocean** | ameno in deep navy with a cyan accent, JetBrains Mono. |
 | **ameno-carbon** | ameno in neutral near-black with IBM blue (Carbon-like colours), IBM Plex Mono. |
@@ -36,7 +36,12 @@ notes.
 | **ameno-neon-space** | neon's palette with Space Mono. |
 | **ameno-cyber** | Pure black, electric cyan accent with yellow and magenta, Space Mono. |
 | **ameno-vapor** | Violet-black, hot pink accent, softer vaporwave neons, Space Mono. |
-| **ameno-sunset** | Pure black, hot orange accent with magenta and lime, Space Mono. |
+| **ameno-sunset** (default) | Pure black, hot orange accent with magenta and lime, Space Mono. |
+| **ameno-dusk** | Violet-black with a violet accent, like a dusk sky, Space Mono. |
+| **ameno-lava** | Warm black, red-orange accent; edit mode is crimson-pink to stay distinct, Space Mono. |
+| **ameno-gold** | Black with an amber accent; the caps tag is cyan to stand apart, Space Mono. |
+| **ameno-tropic** | Teal-black with an orange accent, Space Mono. |
+| **ameno-rose** | Pink-black with a rose accent, Space Mono. |
 | **ameno-ice** | Blue-black, electric periwinkle accent with cyan and mint, Space Mono. |
 | **ameno-ember** | ameno in warm dark brown with coral and amber, Space Mono. |
 | **ameno-day** | ameno as a light paper theme with darkened ink colours for text, Courier Prime. |

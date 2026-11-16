@@ -107,5 +107,10 @@ Skin* makeAmenoCyber() { static Ameno s("ameno-cyber", themes::cyber); return &s
 Skin* makeAmenoVapor() { static Ameno s("ameno-vapor", themes::vapor); return &s; }
 Skin* makeAmenoSunset() { static Ameno s("ameno-sunset", themes::sunset); return &s; }
 Skin* makeAmenoIce() { static Ameno s("ameno-ice", themes::ice); return &s; }
+Skin* makeAmenoDusk() { static Ameno s("ameno-dusk", themes::dusk); return &s; }
+Skin* makeAmenoLava() { static Ameno s("ameno-lava", themes::lava); return &s; }
+Skin* makeAmenoGold() { static Ameno s("ameno-gold", themes::gold); return &s; }
+Skin* makeAmenoTropic() { static Ameno s("ameno-tropic", themes::tropic); return &s; }
+Skin* makeAmenoRose() { static Ameno s("ameno-rose", themes::rose); return &s; }
 Skin* makeAmenoEmber() { static Ameno s("ameno-ember", themes::ember); return &s; }
 Skin* makeAmenoDay() { static Ameno s("ameno-day", themes::day); return &s; }

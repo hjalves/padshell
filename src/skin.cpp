@@ -47,6 +47,11 @@ Skin* makeAmenoCyber();
 Skin* makeAmenoVapor();
 Skin* makeAmenoSunset();
 Skin* makeAmenoIce();
+Skin* makeAmenoDusk();
+Skin* makeAmenoLava();
+Skin* makeAmenoGold();
+Skin* makeAmenoTropic();
+Skin* makeAmenoRose();
 Skin* makeAmenoEmber();
 Skin* makeAmenoDay();
 Skin* makeLight();
@@ -54,21 +59,31 @@ Skin* makeFocus();
 
 namespace skins {
 namespace {
-int g_index = 0;  // metro
+constexpr const char* kDefaultStyle = "ameno-sunset";
+int g_index = -1;  // resolved on first use
 std::string g_path;
+
+int indexOf(const char* name) {
+    for (size_t i = 0; i < all().size(); ++i)
+        if (std::strcmp(all()[i]->name(), name) == 0) return (int)i;
+    return -1;
+}
 }  // namespace
 
 const std::vector<Skin*>& all() {
     static const std::vector<Skin*> list = {
-        makeMetro(),        makeAmeno(),       makeAmenoOcean(), makeAmenoCarbon(),
-        makeAmenoNeon(),    makeAmenoNeonSpace(), makeAmenoCyber(), makeAmenoVapor(),
-        makeAmenoSunset(),  makeAmenoIce(),    makeAmenoEmber(), makeAmenoDay(),
-        makeLight(),        makeFocus()};
+        makeMetro(),       makeAmeno(),      makeAmenoOcean(),     makeAmenoCarbon(), makeAmenoNeon(),
+        makeAmenoNeonSpace(), makeAmenoCyber(), makeAmenoVapor(),  makeAmenoSunset(), makeAmenoDusk(),
+        makeAmenoLava(),   makeAmenoGold(),  makeAmenoTropic(),    makeAmenoRose(),   makeAmenoIce(),
+        makeAmenoEmber(),  makeAmenoDay(),   makeLight(),          makeFocus()};
     return list;
 }
 
-Skin& current() { return *all()[g_index]; }
-int index() { return g_index; }
+int index() {
+    if (g_index < 0) g_index = std::max(0, indexOf(kDefaultStyle));
+    return g_index;
+}
+Skin& current() { return *all()[index()]; }
 
 void select(int i) {
     const int n = (int)all().size();
@@ -88,8 +103,7 @@ void loadSettings(const std::string& path) {
     while (std::fgets(line, sizeof line, f)) {
         line[std::strcspn(line, "\r\n")] = 0;
         if (std::strncmp(line, "style=", 6) != 0) continue;
-        for (size_t i = 0; i < all().size(); ++i)
-            if (std::strcmp(line + 6, all()[i]->name()) == 0) g_index = (int)i;
+        if (int i = indexOf(line + 6); i >= 0) g_index = i;
     }
     std::fclose(f);
 }
