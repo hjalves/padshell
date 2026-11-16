@@ -24,6 +24,8 @@ public:
 private:
     void renderLauncher(Gfx& g);
     void renderController(Gfx& g, Rect area);
+    void renderMetro(Gfx& g);
+    std::vector<std::string> launcherItems() const;
     void switchTo(int index);
 
     std::vector<std::unique_ptr<App>> apps_;

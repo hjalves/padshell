@@ -8,6 +8,7 @@
 #include "pad.h"
 #include "platform.h"
 #include "shell.h"
+#include "ui.h"
 
 int main(int, char**) {
     platform::init();
@@ -23,13 +24,14 @@ int main(int, char**) {
     SDL_Renderer* ren = win ? SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) : nullptr;
     if (!ren && win) ren = SDL_CreateRenderer(win, -1, 0);  // software fallback
     Gfx gfx;
-    if (!ren || !gfx.init(ren, platform::assetPath("fonts/DejaVuSansMono.ttf"))) {
+    if (!ren || !gfx.init(ren, platform::assetPath("fonts/"))) {
         SDL_Log("renderer/font setup failed: %s", SDL_GetError());
         return 1;
     }
     // Draw in 1280x720 coordinates regardless of the real window size.
     SDL_RenderSetLogicalSize(ren, Gfx::W, Gfx::H);
 
+    ui::loadSettings(platform::dataDir() + "settings.ini");
     Shell shell;
     shell.add(std::make_unique<EditorApp>(platform::dataDir() + "notes.txt"));
 

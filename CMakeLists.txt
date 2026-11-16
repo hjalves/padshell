@@ -24,6 +24,7 @@ add_executable(padshell
   src/platform.cpp
   src/shell.cpp
   src/textbuffer.cpp
+  src/ui.cpp
   src/apps/editor.cpp
 )
 target_compile_options(padshell PRIVATE -Wall -Wextra)

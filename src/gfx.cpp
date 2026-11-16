@@ -22,6 +22,8 @@ bool Font::open(SDL_Renderer* r, const std::string& path, int px) {
 void Font::close() {
     for (auto& [cp, g] : cache_) SDL_DestroyTexture(g.tex);
     cache_.clear();
+    for (auto& [str, g] : strings_) SDL_DestroyTexture(g.tex);
+    strings_.clear();
     if (font_) TTF_CloseFont(font_);
     font_ = nullptr;
 }
@@ -44,16 +46,41 @@ SDL_Texture* Font::glyph(uint32_t cp, int* w, int* h) {
     return it->second.tex;
 }
 
-bool Gfx::init(SDL_Renderer* r, const std::string& fontPath) {
+SDL_Texture* Font::string(std::string_view s, int* w, int* h) {
+    std::string key(s);
+    auto it = strings_.find(key);
+    if (it == strings_.end()) {
+        if (strings_.size() > 512) {  // crude bound; typical screens reuse a few dozen
+            for (auto& [str, g] : strings_) SDL_DestroyTexture(g.tex);
+            strings_.clear();
+        }
+        Glyph g{nullptr, 0, 0};
+        if (SDL_Surface* surf = TTF_RenderUTF8_Blended(font_, key.c_str(), SDL_Color{255, 255, 255, 255})) {
+            g.tex = SDL_CreateTextureFromSurface(r_, surf);
+            g.w = surf->w;
+            g.h = surf->h;
+            SDL_FreeSurface(surf);
+        }
+        it = strings_.emplace(std::move(key), g).first;
+    }
+    *w = it->second.w;
+    *h = it->second.h;
+    return it->second.tex;
+}
+
+bool Gfx::init(SDL_Renderer* r, const std::string& fontDir) {
     r_ = r;
     SDL_SetRenderDrawBlendMode(r_, SDL_BLENDMODE_BLEND);
-    return text_.open(r, fontPath, 24) && small_.open(r, fontPath, 18) && large_.open(r, fontPath, 26);
+    const std::string mono = fontDir + "DejaVuSansMono.ttf", sans = fontDir + "DejaVuSans.ttf",
+                      light = fontDir + "DejaVuSans-ExtraLight.ttf";
+    return text_.open(r, mono, 24) && small_.open(r, mono, 18) && large_.open(r, mono, 26) &&
+           monoTV_.open(r, mono, 34) && monoTile_.open(r, mono, 30) && light_.open(r, light, 60) &&
+           lightMid_.open(r, light, 44) && sans_.open(r, sans, 22) && sansSmall_.open(r, sans, 17);
 }
 
 void Gfx::shutdown() {
-    text_.close();
-    small_.close();
-    large_.close();
+    for (Font* f : {&text_, &small_, &large_, &monoTV_, &monoTile_, &light_, &lightMid_, &sans_, &sansSmall_})
+        f->close();
 }
 
 void Gfx::clear(Color c) {
@@ -117,3 +144,21 @@ void Gfx::printCentered(Font& f, int cx, int y, std::string_view s, Color c) {
 }
 
 int Gfx::width(Font& f, std::string_view s) { return (int)utf8::length(s) * f.cellW(); }
+
+int Gfx::draw(Font& f, int x, int y, std::string_view s, Color c) {
+    if (s.empty()) return 0;
+    int w, h;
+    SDL_Texture* t = f.string(s, &w, &h);
+    if (!t) return 0;
+    SDL_SetTextureColorMod(t, c.r, c.g, c.b);
+    SDL_SetTextureAlphaMod(t, c.a);
+    SDL_Rect dst{x, y, w, h};
+    SDL_RenderCopy(r_, t, nullptr, &dst);
+    return w;
+}
+
+int Gfx::measure(Font& f, std::string_view s) {
+    int w = 0;
+    TTF_SizeUTF8(f.ttf(), std::string(s).c_str(), &w, nullptr);
+    return w;
+}

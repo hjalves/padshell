@@ -2,6 +2,8 @@
 
 #include <ctime>
 
+#include "ui.h"
+
 void Shell::add(std::unique_ptr<App> app) {
     apps_.push_back(std::move(app));
     if (apps_.size() == 1) apps_[0]->onEnter();
@@ -35,19 +37,36 @@ void Shell::update(const Gamepad& pad) {
         apps_[current_]->update(pad, *this);
         return;
     }
-    // Launcher: apps, then a final "Quit" entry.
-    int n = (int)apps_.size() + 1;
+    // Launcher: apps, then "Style", then "Quit".
+    const int n = (int)apps_.size() + 2, styleItem = n - 2, quitItem = n - 1;
     if (pad.rep(DUp)) sel_ = (sel_ + n - 1) % n;
     if (pad.rep(DDown)) sel_ = (sel_ + 1) % n;
     if (pad.hit(kBack)) launcher_ = false;
     if (pad.hit(kConfirm)) {
+        if (sel_ == styleItem) {  // stays open so the change is visible
+            ui::setStyle(ui::style() == ui::Style::Metro ? ui::Style::Classic : ui::Style::Metro);
+            return;
+        }
         launcher_ = false;
-        if (sel_ == n - 1) quit();
+        if (sel_ == quitItem) quit();
         else switchTo(sel_);
     }
 }
 
+std::vector<std::string> Shell::launcherItems() const {
+    bool metro = ui::style() == ui::Style::Metro;
+    std::vector<std::string> items;
+    for (const auto& a : apps_) items.push_back(metro ? a->heading() : a->title());
+    items.push_back(std::string(metro ? "style: " : "Style: ") + ui::styleName(ui::style()));
+    items.push_back(metro ? "quit" : "Quit");
+    return items;
+}
+
 void Shell::render(Gfx& g) {
+    if (ui::style() == ui::Style::Metro) {
+        renderMetro(g);
+        return;
+    }
     g.clear(theme::bg);
     Rect area{0, kBarH, Gfx::W - kPanelW, Gfx::H - kBarH};
     if (!apps_.empty()) apps_[current_]->render(g, area);
@@ -75,7 +94,8 @@ void Shell::render(Gfx& g) {
 void Shell::renderLauncher(Gfx& g) {
     g.fill({0, kBarH, Gfx::W, Gfx::H - kBarH}, {0, 0, 0, 160});
     Font& f = g.text();
-    int n = (int)apps_.size() + 1;
+    const std::vector<std::string> items = launcherItems();
+    int n = (int)items.size();
     int rowH = f.lineH() + 16, w = 420, h = n * rowH + 70;
     Rect box{(Gfx::W - w) / 2, (Gfx::H - h) / 2, w, h};
     g.fill(box, theme::panel);
@@ -84,8 +104,7 @@ void Shell::renderLauncher(Gfx& g) {
     for (int i = 0; i < n; ++i) {
         Rect row{box.x + 10, box.y + 44 + i * rowH, w - 20, rowH};
         if (i == sel_) g.fill(row, theme::accent);
-        std::string label = i < (int)apps_.size() ? apps_[i]->title() : "Quit";
-        g.print(f, row.x + 14, row.y + 8, label, i == sel_ ? theme::bg : theme::text);
+        g.print(f, row.x + 14, row.y + 8, items[i], i == sel_ ? theme::bg : theme::text);
     }
 }
 
@@ -147,4 +166,26 @@ void Shell::renderController(Gfx& g, Rect p) {
         g.print(sf, p.x + 20, y, line, theme::dim);
         y += sf.lineH() + 2;
     }
+}
+
+// Metro / TV: no chrome, just a small caps app label, a large light heading
+// and the clock, inside the TV-safe margins. Apps get everything below.
+void Shell::renderMetro(Gfx& g) {
+    using namespace ui::metro;
+    g.clear(bg);
+    const int x = kMarginX, y = kMarginY;
+    g.draw(g.sansSmall(), x, y, "PADSHELL", cyan);
+    if (!apps_.empty()) g.draw(g.light(), x - 4, y + 14, apps_[current_]->heading(), text);
+
+    char clock[16];
+    std::time_t now = std::time(nullptr);
+    std::strftime(clock, sizeof clock, "%H:%M", std::localtime(&now));
+    int cw = Gfx::measure(g.lightMid(), clock);
+    g.draw(g.lightMid(), Gfx::W - kMarginX - cw, y + 8, clock, text);
+    if (SDL_GetTicks() < toastUntil_)
+        g.draw(g.sans(), Gfx::W - kMarginX - Gfx::measure(g.sans(), toast_), y + 62, toast_, amber);
+
+    Rect area{x, y + 104, Gfx::W - 2 * x, Gfx::H - (y + 104) - kMarginY};
+    if (!apps_.empty()) apps_[current_]->render(g, area);
+    if (launcher_) drawMenu(g, "APPS", launcherItems(), sel_, cyan);
 }

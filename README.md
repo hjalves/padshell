@@ -17,6 +17,23 @@ the status line shows its cycle. Otherwise the status line shows the button
 groups, or the alternate commands while a trigger is held. The panel on the
 right is a controller diagram that lights up the buttons being pressed.
 
+## Styles
+
+Pick a style in the − app menu (*Style*); the choice is saved in
+`settings.ini` next to the notes.
+
+![Metro style](docs/metro.png)
+
+* **Metro** (default): a 10-foot TV layout. Pure black canvas, a large light
+  lowercase heading, big type, and the eight character groups shown as flat
+  colour tiles laid out like the controller (D-pad left, face buttons
+  right). Tiles light up when pressed and show the character being selected.
+  Each mode has its own palette: letters are multicoloured, symbols green,
+  edit commands red. Chips above the tiles show ZL, ZR and uppercase.
+  Everything stays inside TV-safe margins.
+* **Classic**: the denser layout with line numbers, a status line and the
+  controller diagram.
+
 ## Controls
 
 Buttons are named as printed on a **Switch** controller. (The design came from
@@ -127,11 +144,12 @@ src/
   multitap.*        multi-tap text entry (pure logic, unit tested)
   textbuffer.*      editable UTF-8 text
   gfx.*             drawing helpers, cached monospace glyphs
-  shell.*           top bar, controller diagram, launcher, app switching
+  shell.*           header/top bar, controller diagram, launcher, app switching
+  ui.*              style setting and the Metro palette / menu
   app.h             interface every app implements
   apps/editor.*     the text editor
 tests/              host-only unit tests
-romfs/              bundled assets (DejaVu Sans Mono, see its licence)
+romfs/              bundled assets (DejaVu fonts, see their licence)
 tools/              build script, xdotool typing helper for desktop testing
 ```
 
