@@ -9,9 +9,9 @@
 
 namespace platform {
 
-void init();              // romfs, sockets, nxlink stdio on Switch; nothing on desktop
+void init();              // nxlink stdio on Switch (romfs/sockets: userAppInit); hints on desktop
 void closeControllers();  // must run before SDL_Quit()
-void shutdown();          // after SDL_Quit(): sockets, romfs
+void shutdown();          // after SDL_Quit() (Switch teardown is in userAppExit)
 
 std::string assetPath(const std::string& rel);  // read-only bundled files
 std::string dataDir();                          // writable, created on demand

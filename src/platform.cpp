@@ -8,8 +8,11 @@
 #include <vector>
 
 #ifdef __SWITCH__
+#include <dirent.h>
 #include <switch.h>
 #include <unistd.h>
+
+#include <cstdio>
 #endif
 
 namespace platform {
@@ -34,12 +37,42 @@ float axis(SDL_GameController* c, SDL_GameControllerAxis a) {
 }
 }  // namespace
 
+#ifdef __SWITCH__
+// Prints the newest Atmosphere report in `dir` (file names start with a
+// timestamp, so the lexically largest is the newest). Debug aid: only used
+// when launched with `nxlink -s`, so the output reaches the PC.
+void dumpLatestReport(const char* dir) {
+    DIR* d = opendir(dir);
+    if (!d) return;
+    std::string newest;
+    while (dirent* e = readdir(d)) {
+        std::string n = e->d_name;
+        if (n.size() > 4 && n.compare(n.size() - 4, 4, ".log") == 0 && n > newest) newest = n;
+    }
+    closedir(d);
+    if (newest.empty()) return;
+    std::string path = std::string(dir) + "/" + newest;
+    std::printf("==== %s ====\n", path.c_str());
+    if (FILE* f = std::fopen(path.c_str(), "r")) {
+        char line[512];
+        for (int n = 0; n < 400 && std::fgets(line, sizeof line, f); ++n) std::fputs(line, stdout);
+        std::fclose(f);
+    }
+    std::printf("==== end ====\n");
+    std::fflush(stdout);
+}
+#endif
+
 void init() {
 #ifdef __SWITCH__
-    romfsInit();
-    // Lets `nxlink -s` show printf/SDL_Log output on the PC. Harmless when the
-    // app wasn't launched via nxlink (socket connect just fails).
-    if (R_SUCCEEDED(socketInitializeDefault())) g_nxlinkSock = nxlinkStdio();
+    // romfs and sockets are set up in userAppInit() below. Lets `nxlink -s`
+    // show printf/SDL_Log output on the PC; harmless when the app wasn't
+    // launched via nxlink (the connect just fails).
+    g_nxlinkSock = nxlinkStdio();
+    if (g_nxlinkSock >= 0) {
+        dumpLatestReport("sdmc:/atmosphere/fatal_reports");
+        dumpLatestReport("sdmc:/atmosphere/crash_reports");
+    }
 #else
     // Positional face buttons on desktop too, even for Nintendo-layout pads.
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
@@ -52,11 +85,7 @@ void closeControllers() {
 }
 
 void shutdown() {
-#ifdef __SWITCH__
-    if (g_nxlinkSock >= 0) close(g_nxlinkSock);
-    socketExit();
-    romfsExit();
-#endif
+    // Nothing on the Switch: romfs and sockets are torn down in userAppExit().
 }
 
 std::string assetPath(const std::string& rel) {
@@ -162,3 +191,21 @@ void samplePad(uint32_t& held, float& lx, float& ly, float& rx, float& ry) {
 }
 
 }  // namespace platform
+
+#ifdef __SWITCH__
+// libnx hooks. Teardown order matters: newlib closes every still-open stdio
+// stream after main() returns, and stdout/stderr may be redirected to the
+// nxlink socket (romfs files could be open too). Removing those devices in
+// main() made that final close dereference a removed device and crash into
+// an Atmosphere fatal screen. userAppExit() runs after the streams are
+// closed, so the devices outlive them.
+extern "C" void userAppInit(void) {
+    romfsInit();
+    socketInitializeDefault();
+}
+
+extern "C" void userAppExit(void) {
+    socketExit();
+    romfsExit();
+}
+#endif
