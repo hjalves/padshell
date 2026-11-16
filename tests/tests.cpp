@@ -1,10 +1,10 @@
 // Host-only unit tests for the non-drawing logic: text buffer,
-// pad edge/repeat tracking and the daisywheel input method.
+// pad edge/repeat tracking and the multi-tap input method.
 #include <cstdio>
 #include <cstdlib>
 #include <string>
 
-#include "../src/ime.h"
+#include "../src/multitap.h"
 #include "../src/pad.h"
 #include "../src/textbuffer.h"
 #include "../src/utf8.h"
@@ -80,58 +80,160 @@ static void testTracker() {
     CHECK(s.released & South);
 }
 
-static std::string typeWith(DaisyWheel& w, PadTracker& t, uint32_t& clock, float x, float y,
-                            uint32_t btn, uint32_t mods = 0) {
-    std::vector<TextEvent> ev;
-    w.update(t.update(mods, x, y, 0, 0, clock += 16), ev);
-    w.update(t.update(mods | btn, x, y, 0, 0, clock += 16), ev);
-    w.update(t.update(mods, x, y, 0, 0, clock += 16), ev);
-    std::string out;
-    for (auto& e : ev) {
-        if (e.kind == TextEvent::Insert) out += e.text;
-        else if (e.kind == TextEvent::Backspace) out += "<BS>";
-        else if (e.kind == TextEvent::Newline) out += "<NL>";
+// Drives a MultiTap with a simulated clock. Each call is one frame.
+struct Sim {
+    MultiTap tap;
+    PadTracker tracker;
+    uint32_t now = 0;
+    uint32_t held = 0;
+    std::string out;  // committed text, with \n, <BS> and <DL> markers
+
+    void frame(uint32_t dt = 16) {
+        now += dt;
+        std::vector<TextEvent> ev;
+        tap.update(tracker.update(held, 0, 0, 0, 0, now), ev);
+        for (auto& e : ev) {
+            switch (e.kind) {
+                case TextEvent::Insert: out += e.text; break;
+                case TextEvent::Newline: out += "\n"; break;
+                case TextEvent::Backspace: out += "<BS>"; break;
+                case TextEvent::DeleteLine: out += "<DL>"; break;
+            }
+        }
     }
-    return out;
+    void press(uint32_t b, int times = 1) {
+        for (int i = 0; i < times; ++i) {
+            held |= b; frame();
+            held &= ~b; frame();
+        }
+    }
+    void hold(uint32_t b) { held |= b; frame(); }
+    void release(uint32_t b) { held &= ~b; frame(); }
+    void wait(uint32_t ms) { frame(ms); }
+};
+
+static void testMultiTap() {
+    {   // Spec example: A twice, wait, X once, wait -> "bd" (A = South, X = West).
+        Sim s;
+        s.press(South, 2);
+        CHECK(s.tap.pendingText() == "b" && s.out.empty());
+        s.wait(1000);
+        CHECK(s.out == "b" && !s.tap.hasPending());
+        s.press(West);
+        s.wait(1000);
+        CHECK(s.out == "bd");
+    }
+    {   // A different group commits immediately; same group cycles and wraps.
+        Sim s;
+        s.press(South);
+        s.press(DRight, 5);  // w x y z w
+        CHECK(s.out == "a" && s.tap.pendingText() == "w");
+        s.press(DDown);
+        CHECK(s.out == "aw" && s.tap.pendingText() == "m");
+    }
+    {   // Not committed before the full second of inactivity.
+        Sim s;
+        s.press(South);
+        s.wait(900);
+        CHECK(s.out.empty());
+        s.press(South);  // cycling restarts the timer
+        s.wait(900);
+        CHECK(s.out.empty() && s.tap.pendingText() == "b");
+        s.wait(200);
+        CHECK(s.out == "b");
+    }
+    {   // Symbols (hold left trigger); shared characters continue the cycle.
+        Sim s;
+        s.hold(ZL);
+        CHECK(s.tap.mode() == MultiTap::Mode::Symbols);
+        s.press(DLeft, 5);  // ( [ { < "
+        CHECK(s.tap.pendingText() == "\"");
+        s.press(DRight);    // " is in ) ] } > " '  -> continue to '
+        CHECK(s.out.empty() && s.tap.pendingText() == "'");
+        s.press(East, 1);   // ' not in "0." -> commit, start 0
+        CHECK(s.out == "'" && s.tap.pendingText() == "0");
+        s.press(East);      // .
+        s.press(DDown);     // . is in . , ? ... -> ,
+        CHECK(s.tap.pendingText() == ",");
+        s.release(ZL);      // releasing the trigger commits
+        CHECK(s.out == "',");
+        s.press(South);     // back to letters
+        CHECK(s.tap.pendingText() == "a");
+    }
+    {   // Uppercase is one-shot and applies to the character being previewed.
+        Sim s;
+        s.press(South);
+        s.press(L);
+        CHECK(s.tap.pendingText() == "A");
+        s.wait(1000);
+        s.press(South);
+        s.wait(1000);
+        CHECK(s.out == "Aa" && !s.tap.uppercase());
+    }
+    {   // Toggling uppercase restarts the pending character's timer.
+        Sim s;
+        s.press(South);
+        s.wait(900);
+        s.press(L);
+        s.wait(900);
+        CHECK(s.out.empty());
+        s.wait(200);
+        CHECK(s.out == "A");
+    }
+    {   // Holding the shoulder through commits keeps uppercase on; after release
+        // it stays on until the next commit.
+        Sim s;
+        s.hold(L);                  // toggles on
+        s.press(South); s.wait(1000);
+        s.press(West); s.wait(1000);
+        CHECK(s.out == "AD" && s.tap.uppercase());
+        s.release(L);
+        CHECK(s.tap.uppercase());
+        s.press(North); s.wait(1000);
+        CHECK(s.out == "ADG" && !s.tap.uppercase());
+        s.press(North); s.wait(1000);
+        CHECK(s.out == "ADGg");
+    }
+    {   // Right trigger: commands; pressing it commits the pending character.
+        Sim s;
+        s.press(South);
+        s.hold(ZR);
+        CHECK(s.out == "a" && s.tap.mode() == MultiTap::Mode::Commands);
+        s.press(South);  // newline
+        s.press(West);   // space
+        s.press(East);   // backspace
+        s.press(North);  // delete line
+        s.press(DUp);    // nothing
+        CHECK(s.out == "a\n <BS><DL>");
+        s.hold(ZL);      // both triggers: commands win
+        s.press(South);
+        CHECK(s.out == "a\n <BS><DL>\n");
+    }
 }
 
-static void testDaisyWheel() {
-    CHECK(DaisyWheel::petalFor(0, 0) == -1);
-    CHECK(DaisyWheel::petalFor(0.2f, 0.2f) == -1);  // inside deadzone
-    CHECK(DaisyWheel::petalFor(0, -1) == 0);        // up
-    CHECK(DaisyWheel::petalFor(0.7f, -0.7f) == 1);  // up-right
-    CHECK(DaisyWheel::petalFor(1, 0) == 2);         // right
-    CHECK(DaisyWheel::petalFor(0, 1) == 4);         // down
-    CHECK(DaisyWheel::petalFor(-1, 0) == 6);        // left
-    CHECK(DaisyWheel::petalFor(-0.7f, -0.7f) == 7); // up-left
-
-    DaisyWheel w;
-    PadTracker t;
-    uint32_t clock = 0;
-    CHECK(typeWith(w, t, clock, 0, -1, North) == "a");
-    CHECK(typeWith(w, t, clock, 0, -1, West) == "d");
-    CHECK(typeWith(w, t, clock, 1, 0, East) == "j");       // petal 2, slot 1
-    CHECK(typeWith(w, t, clock, -0.7f, -0.7f, West) == "-");
-    CHECK(typeWith(w, t, clock, 0, -1, North, ZR) == "A"); // shift
-    CHECK(typeWith(w, t, clock, 0, 0, South) == " ");
-    CHECK(typeWith(w, t, clock, 0, 0, East) == "<BS>");
-    CHECK(typeWith(w, t, clock, 0, 0, North) == "<NL>");
-
-    typeWith(w, t, clock, 0, 0, R);  // next layer: ABC
-    CHECK(w.layer() == 1);
-    CHECK(typeWith(w, t, clock, 0, -1, South) == "C");
-    typeWith(w, t, clock, 0, 0, R);  // 123
-    CHECK(typeWith(w, t, clock, 0, -1, North) == "1");
-    typeWith(w, t, clock, 0, 0, R);  // wraps to abc
-    CHECK(w.layer() == 0);
-    typeWith(w, t, clock, 0, 0, L);  // backwards wraps to 123
-    CHECK(w.layer() == 2);
+static void testDeleteLastLine() {
+    TextBuffer b;
+    b.setText("first\nsecond");
+    b.deleteLastLine();
+    CHECK(b.text() == "first");
+    b.setText("first\n");
+    b.deleteLastLine();
+    CHECK(b.text() == "first");
+    b.deleteLastLine();
+    CHECK(b.text().empty());
+    b.setText("a\n\n");
+    b.deleteLastLine();
+    CHECK(b.text() == "a\n");
+    b.setText("");
+    b.deleteLastLine();
+    CHECK(b.text().empty() && !b.modified());
 }
 
 int main() {
     testBuffer();
     testTracker();
-    testDaisyWheel();
+    testMultiTap();
+    testDeleteLastLine();
     if (g_failed) {
         std::printf("%d check(s) failed\n", g_failed);
         return 1;

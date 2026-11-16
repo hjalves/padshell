@@ -1,12 +1,14 @@
 #pragma once
-#include <memory>
 #include <string>
+#include <vector>
 
 #include "../app.h"
-#include "../ime.h"
+#include "../multitap.h"
 #include "../textbuffer.h"
 
-// Single-file text editor. Plus saves; it also autosaves when you leave it.
+// Single-file, append-only text editor driven by multi-tap input. Text is
+// always added at the end of the document; Plus opens the editor menu (save,
+// quit). The document is saved automatically when the editor is left.
 class EditorApp : public App {
 public:
     explicit EditorApp(std::string path);
@@ -15,17 +17,18 @@ public:
     void onLeave() override;
     void update(const Gamepad& pad, Shell& shell) override;
     void render(Gfx& g, Rect area) override;
-
-    static constexpr int kImeW = 420;
+    std::vector<std::string> help() const override;
 
 private:
+    void apply(const std::vector<TextEvent>& events);
     bool save(Shell* shell);
+    void updateMenu(const Gamepad& pad, Shell& shell);
+    void renderStatus(Gfx& g, Rect r);
+    void renderMenu(Gfx& g, Rect area);
 
     std::string path_;
     TextBuffer buf_;
-    std::unique_ptr<InputMethod> ime_;
-    int top_ = 0;      // first visible line
-    int left_ = 0;     // first visible column
-    int visibleLines_ = 20;
-    uint32_t lastEdit_ = 0;  // for cursor blink
+    MultiTap tap_;
+    bool menu_ = false;
+    int menuSel_ = 0;
 };

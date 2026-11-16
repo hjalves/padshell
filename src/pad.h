@@ -32,19 +32,50 @@ struct Gamepad {
     uint32_t repeat = 0;    // pressed this frame, or auto-repeating while held
     float lx = 0, ly = 0;   // left stick, -1..1, +y is down (SDL convention)
     float rx = 0, ry = 0;
+    uint32_t ms = 0;        // timestamp of this sample
 
     bool down(Btn b) const { return held & b; }
     bool hit(Btn b) const { return pressed & b; }
     bool rep(Btn b) const { return repeat & b; }
 };
 
-// "Confirm" and "back" follow the platform convention: A is East on Switch,
-// South on Xbox-style pads.
-#ifdef __SWITCH__
-constexpr Btn kConfirm = East, kBack = South;
-#else
+// Menus select with the bottom face button and cancel with the right one
+// (Xbox A / B; on a Switch controller that is B / A).
 constexpr Btn kConfirm = South, kBack = East;
+
+// The label printed on the button in each position, for on-screen hints.
+inline const char* btnLabel(Btn b) {
+    switch (b) {
+#ifdef __SWITCH__
+        case North: return "X";
+        case East: return "A";
+        case South: return "B";
+        case West: return "Y";
+        case L: return "L";
+        case R: return "R";
+        case ZL: return "ZL";
+        case ZR: return "ZR";
+#else
+        case North: return "Y";
+        case East: return "B";
+        case South: return "A";
+        case West: return "X";
+        case L: return "LB";
+        case R: return "RB";
+        case ZL: return "LT";
+        case ZR: return "RT";
 #endif
+        case Plus: return "+";
+        case Minus: return "-";
+        case DUp: return "\u2191";
+        case DDown: return "\u2193";
+        case DLeft: return "\u2190";
+        case DRight: return "\u2192";
+        case LStick: return "LS";
+        case RStick: return "RS";
+    }
+    return "?";
+}
 
 // Turns raw "which buttons are held" samples into a Gamepad with edge
 // detection and key-repeat. Pure logic, so it can be unit tested.
@@ -59,6 +90,7 @@ public:
         s.pressed = held & ~prev_;
         s.released = prev_ & ~held;
         s.lx = lx; s.ly = ly; s.rx = rx; s.ry = ry;
+        s.ms = nowMs;
         s.repeat = s.pressed;
         for (int i = 0; i < 32; ++i) {
             uint32_t bit = 1u << i;

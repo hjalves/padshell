@@ -1,39 +1,83 @@
 # padshell
 
 A Nintendo Switch homebrew "shell": a set of apps in one process, driven
-entirely by the gamepad. The first app is a text editor that you type into with
-a daisywheel-style input method instead of an on-screen keyboard.
+entirely by the gamepad. The first app is a text editor you type into with
+phone-style multi-tap on the face buttons and D-pad, with no on-screen keyboard.
 
 ![padshell editor](docs/screenshot.png)
 
 The same code builds for desktop Linux (SDL2), so you can iterate without
 copying to the console.
 
+## Screen
+
+The editor shows the document with an underline cursor at the end, and a
+status line. While a character is being selected it appears at the cursor and
+the status line shows its cycle. Otherwise the status line shows the button
+groups, or the alternate commands while a trigger is held. The panel on the
+right is a controller diagram that lights up the buttons being pressed.
+
 ## Controls
 
-| Input | Action |
+Buttons are named as printed on a **Switch** controller. (The design came from
+an Xbox layout: Xbox A/B/X/Y sit where the Switch has B/A/Y/X, and
+LT/RT/LB are ZL/ZR/L.)
+
+| Button | Use |
 |---|---|
-| Left stick toward a petal + face button | type the character in that position of the petal |
-| Face buttons, stick centred | South: space, East: backspace, North: newline, West: delete |
-| L / R | previous / next layer (abc, ABC, 123) |
-| ZR (hold) | uppercase |
-| D-pad | move cursor |
-| ZL + D-pad | Home / End / Page up / Page down |
-| + | save |
-| − | app menu (switch app, quit) |
+| B / A / Y / X, D-pad | character groups |
+| ZL (hold) | numbers and symbols (green cursor) |
+| ZR (hold) | newline, space, backspace, delete line (red cursor) |
+| L | toggle uppercase |
+| + | editor menu (save, quit). In menus: B select, A cancel, D-pad up/down move |
+| − | app menu |
 
-Face buttons are by **position**. On a Switch, South is B, East is A, North is
-X and West is Y. In menus, confirm and back follow each platform's convention
-(A/B on the Switch).
+### Entering text
 
-The editor works on `sdmc:/switch/padshell/notes.txt` on the Switch, or
-`~/.local/share/padshell/notes.txt` on desktop (override with `PADSHELL_DATA`).
-It autosaves when you quit.
+Press a character button to preview the first character of its group, and
+press it again within a second to cycle. The character is committed after one
+second without input, or when a character from another group is selected.
+B B, wait, Y, wait types `bd`. For two characters from the same group, wait for
+the first to commit. Whether a press cycles depends on whether the *current*
+character is in the pressed group, so symbol groups that share `"` `'` `.`
+continue each other's cycle.
 
-### Desktop keyboard as a fake gamepad
+| Button | Letters | ZL held |
+|---|---|---|
+| B | `a b c` | `1 2 3` |
+| Y | `d e f` | `4 5 6` |
+| X | `g h i` | `7 8 9` |
+| A | `j k l` | `0 .` |
+| D-pad down | `m n o` | `. , ? ! _ : ; \|` |
+| D-pad left | `p q r s` | `( [ { < " '` |
+| D-pad up | `t u v` | `- = + * / ^ ~ # % @` |
+| D-pad right | `w x y z` | `) ] } > " '` |
 
-`WASD` left stick · `I/L/K/J` North/East/South/West · arrows D-pad ·
-`Q/E` L/R · `Z/C` ZL/ZR · `Return` + · `Tab` − · `Esc` quit
+Releasing ZL commits the pending character.
+
+**Uppercase:** L toggles it, including for the character being previewed, and
+restarts that character's one-second timer. It turns off after the next
+committed character. If L is held while characters are committed, it stays on
+while held, and after release it stays on until the next commit (or another
+press of L).
+
+**Commands (hold ZR):** B newline, Y space, A backspace, X delete the last
+line (`first\nsecond` → `first`, `first\n` → `first`, a single line is
+cleared). Pressing ZR, or any command, commits the pending character first.
+ZR takes precedence when both triggers are held.
+
+Text is always added at the end of the document. The editor works on
+`sdmc:/switch/padshell/notes.txt` on the Switch, or
+`~/.local/share/padshell/notes.txt` on desktop (override with
+`PADSHELL_DATA`). It saves automatically when you quit.
+
+### Desktop testing
+
+On desktop the keyboard acts as a gamepad, for testing without a controller:
+`I/L/K/J` top/right/bottom/left face button, arrows D-pad, `Q/E` L/R, `Z/C`
+ZL/ZR, `Return` +, `Tab` −, `Esc` quit. `tools/xdo_type.py "text"` types a
+string through it with xdotool. On-screen labels follow the platform (Xbox
+labels on desktop).
 
 ## Building
 
@@ -80,10 +124,10 @@ src/
   main.cpp          SDL setup and main loop
   platform.*        Switch and desktop differences: paths, init, controller mapping
   pad.h             logical gamepad state + edge/repeat tracking
-  ime.*             input methods (logic); ime_view.cpp draws them
+  multitap.*        multi-tap text entry (pure logic, unit tested)
   textbuffer.*      editable UTF-8 text
   gfx.*             drawing helpers, cached monospace glyphs
-  shell.*           top bar, launcher, app switching
+  shell.*           top bar, controller diagram, launcher, app switching
   app.h             interface every app implements
   apps/editor.*     the text editor
 tests/              host-only unit tests
@@ -93,6 +137,6 @@ tools/              build script, xdotool typing helper for desktop testing
 
 ### Adding an app
 
-Subclass `App` (`title`, `update`, `render`, plus `onEnter`/`onLeave` if needed),
-then register it in `main.cpp` with `shell.add(...)`. Apps that need text input
-own an `InputMethod` (e.g. `DaisyWheel`) and apply the `TextEvent`s it emits.
+Subclass `App` (`title`, `update`, `render`, and optionally `onEnter`/`onLeave`
+and `help`), then register it in `main.cpp` with `shell.add(...)`. Apps that
+need text input own a `MultiTap` and apply the `TextEvent`s it emits.

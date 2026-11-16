@@ -61,6 +61,20 @@ void TextBuffer::deleteForward() {
     }
 }
 
+void TextBuffer::deleteLastLine() {
+    if (lines_.size() > 1) lines_.pop_back();
+    else if (lines_[0].empty()) return;
+    else lines_[0].clear();
+    modified_ = true;
+    moveToEnd();
+}
+
+void TextBuffer::moveToEnd() {
+    line_ = (int)lines_.size() - 1;
+    col_ = lines_[line_].size();
+    goalColumn_ = -1;
+}
+
 void TextBuffer::left() {
     goalColumn_ = -1;
     if (col_ > 0) col_ = utf8::prev(lines_[line_], col_);

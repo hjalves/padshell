@@ -20,8 +20,7 @@ pkg_check_modules(SDL REQUIRED IMPORTED_TARGET sdl2 SDL2_ttf)
 add_executable(padshell
   src/main.cpp
   src/gfx.cpp
-  src/ime.cpp
-  src/ime_view.cpp
+  src/multitap.cpp
   src/platform.cpp
   src/shell.cpp
   src/textbuffer.cpp
@@ -53,8 +52,7 @@ else()
             ${CMAKE_CURRENT_SOURCE_DIR}/romfs $<TARGET_FILE_DIR:padshell>/romfs)
 
   enable_testing()
-  add_executable(padshell_tests tests/tests.cpp src/textbuffer.cpp src/ime.cpp src/ime_view.cpp src/gfx.cpp)
-  target_link_libraries(padshell_tests PRIVATE PkgConfig::SDL m)
+  add_executable(padshell_tests tests/tests.cpp src/textbuffer.cpp src/multitap.cpp)
   target_compile_options(padshell_tests PRIVATE -Wall -Wextra)
   add_test(NAME padshell_tests COMMAND padshell_tests)
 endif()

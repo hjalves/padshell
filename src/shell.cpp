@@ -25,6 +25,7 @@ void Shell::switchTo(int index) {
 }
 
 void Shell::update(const Gamepad& pad) {
+    pad_ = pad;
     if (pad.hit(Minus)) {
         launcher_ = !launcher_;
         sel_ = current_;
@@ -48,8 +49,9 @@ void Shell::update(const Gamepad& pad) {
 
 void Shell::render(Gfx& g) {
     g.clear(theme::bg);
-    Rect area{0, kBarH, Gfx::W, Gfx::H - kBarH};
+    Rect area{0, kBarH, Gfx::W - kPanelW, Gfx::H - kBarH};
     if (!apps_.empty()) apps_[current_]->render(g, area);
+    renderController(g, {Gfx::W - kPanelW, kBarH, kPanelW, Gfx::H - kBarH});
 
     // Top bar.
     g.fill({0, 0, Gfx::W, kBarH}, theme::panelHi);
@@ -63,7 +65,7 @@ void Shell::render(Gfx& g) {
     int cw = Gfx::width(g.small(), clock);
     g.print(g.small(), Gfx::W - 14 - cw, ty, clock, theme::text);
 
-    std::string right = SDL_GetTicks() < toastUntil_ ? toast_ : "-: menu";
+    std::string right = SDL_GetTicks() < toastUntil_ ? toast_ : "-: apps";
     g.print(g.small(), Gfx::W - 40 - cw - Gfx::width(g.small(), right), ty, right,
             SDL_GetTicks() < toastUntil_ ? theme::warn : theme::dim);
 
@@ -84,5 +86,65 @@ void Shell::renderLauncher(Gfx& g) {
         if (i == sel_) g.fill(row, theme::accent);
         std::string label = i < (int)apps_.size() ? apps_[i]->title() : "Quit";
         g.print(f, row.x + 14, row.y + 8, label, i == sel_ ? theme::bg : theme::text);
+    }
+}
+
+// A schematic Switch-style controller (sticks offset, D-pad bottom-left) with
+// the buttons currently held lit up, plus the foreground app's hints.
+void Shell::renderController(Gfx& g, Rect p) {
+    g.fill(p, theme::panel);
+    auto col = [&](uint32_t bits) { return (pad_.held & bits) ? theme::accent : theme::bg; };
+    auto txt = [&](uint32_t bits) { return (pad_.held & bits) ? theme::bg : theme::text; };
+    Font& sf = g.small();
+
+    // Shoulders and triggers.
+    struct Sh { Btn b; int x, y, h; };
+    for (Sh s : {Sh{ZL, 40, 18, 34}, Sh{L, 40, 58, 28}, Sh{ZR, 250, 18, 34}, Sh{R, 250, 58, 28}}) {
+        Rect r{p.x + s.x, p.y + s.y, 110, s.h};
+        g.fill(r, col(s.b));
+        g.printCentered(sf, r.x + r.w / 2, r.y + (s.h - sf.lineH()) / 2, btnLabel(s.b), txt(s.b));
+    }
+
+    Rect body{p.x + 20, p.y + 96, p.w - 40, 236};
+    g.fill(body, theme::panelHi);
+    const int lx = p.x + 105, rx = p.x + p.w - 105, topY = body.y + 72, botY = body.y + 170;
+
+    // Sticks: ring plus a dot showing deflection.
+    auto stick = [&](int cx, int cy, float x, float y, Btn click) {
+        g.fillCircle(cx, cy, 34, col(click));
+        g.ring(cx, cy, 34, 2, theme::dim);
+        g.fillCircle(cx + x * 22, cy + y * 22, 10, theme::text);
+    };
+    stick(lx, topY, pad_.lx, pad_.ly, LStick);
+    stick(rx, botY, pad_.rx, pad_.ry, RStick);
+
+    // D-pad.
+    struct D { Btn b; int dx, dy; };
+    for (D d : {D{DUp, 0, -1}, D{DDown, 0, 1}, D{DLeft, -1, 0}, D{DRight, 1, 0}}) {
+        Rect r{lx + d.dx * 32 - 15, botY + d.dy * 32 - 15, 30, 30};
+        g.fill(r, col(d.b));
+        g.printCentered(sf, r.x + 15, r.y + (30 - sf.lineH()) / 2, btnLabel(d.b), txt(d.b));
+    }
+    g.fill({lx - 15, botY - 15, 30, 30}, theme::bg);
+
+    // Face buttons, by position.
+    for (D d : {D{North, 0, -1}, D{South, 0, 1}, D{West, -1, 0}, D{East, 1, 0}}) {
+        int cx = rx + d.dx * 36, cy = topY + d.dy * 36;
+        g.fillCircle(cx, cy, 19, col(d.b));
+        g.printCentered(sf, cx, cy - sf.lineH() / 2, btnLabel(d.b), txt(d.b));
+    }
+
+    // Minus / Plus.
+    for (D d : {D{Minus, -1, 0}, D{Plus, 1, 0}}) {
+        int cx = p.x + p.w / 2 + d.dx * 34, cy = body.y + 34;
+        g.fillCircle(cx, cy, 13, col(d.b));
+        g.printCentered(sf, cx, cy - sf.lineH() / 2, btnLabel(d.b), txt(d.b));
+    }
+
+    if (apps_.empty()) return;
+    int y = body.y + body.h + 24;
+    for (const std::string& line : apps_[current_]->help()) {
+        g.print(sf, p.x + 20, y, line, theme::dim);
+        y += sf.lineH() + 2;
     }
 }

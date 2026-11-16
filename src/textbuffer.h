@@ -14,6 +14,9 @@ public:
     void newline();
     void backspace();
     void deleteForward();
+    // Removes the last newline-separated segment: "a\nb" -> "a", "a\n" -> "a",
+    // "a" -> "". Leaves the cursor at the end.
+    void deleteLastLine();
 
     void left();
     void right();
@@ -21,6 +24,7 @@ public:
     void down();
     void home();
     void end();
+    void moveToEnd();  // end of the document
     void pageUp(int lines);
     void pageDown(int lines);
 
