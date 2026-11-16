@@ -14,7 +14,7 @@ copying to the console.
 
 ## Screen
 
-After the [ameno](https://github.com/hjalves/ameno-textpad) TV web app: a slim
+After ameno, the author's TV web-app editor of the same design: a slim
 top bar (brand, counts, clock), a large document with characters coloured by
 kind, and a status line of flat button badges with their groups. While a
 character is being selected it appears at the cursor in its button's colour,
@@ -252,6 +252,14 @@ tools/              build script, xdotool typing helper for desktop testing
 
 ### Adding an app
 
-Subclass `App` (`title`, `update`, `render`, and optionally `onEnter`/`onLeave`
-and `help`), then register it in `main.cpp` with `shell.add(...)`. Apps that
-need text input own a `MultiTap` and apply the `TextEvent`s it emits.
+Subclass `App` (`title`, `heading`, `update`, `render`, and optionally
+`onEnter`/`onLeave`), then register it in `main.cpp` with `shell.add(...)`;
+the first app added opens at launch. Apps draw through the skin (`skin.h`)
+and those that need text input use `MultiTap` or the single-line
+`TextInput`.
+
+## Licence
+
+MIT, see [LICENSE](LICENSE). The bundled fonts keep their own licences
+(DejaVu, and the SIL Open Font License for the others), included next to
+them in `romfs/fonts/`.
