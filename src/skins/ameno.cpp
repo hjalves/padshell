@@ -12,7 +12,8 @@ using namespace fam;
 const Palette& P = darkPalette();
 const char* kMono = "DejaVuSansMono.ttf";
 const char* kBold = "DejaVuSansMono-Bold.ttf";
-constexpr int kM = 64;  // side margin
+constexpr int kM = 64;        // side margin
+constexpr int kStatusY = 640;  // badges row; timer below it, just inside the TV-safe bottom margin
 
 class Ameno : public Skin {
 public:
@@ -40,13 +41,13 @@ public:
                P.muted);
 
         Font& f = g.font(kMono, 38);
-        document(g, {kM, 117, a.w, 427}, v, P, {&f, 54, 6});
+        document(g, {kM, 117, a.w, 486}, v, P, {&f, 54, 6});
 
         status(g, v);
     }
 
     void menu(Gfx& g, const std::string& title, const std::vector<std::string>& items, int sel) override {
-        g.fill({0, 100, Gfx::W, 467}, P.bg);
+        g.fill({0, 100, Gfx::W, kStatusY - 116}, P.bg);
         g.draw(g.font(kMono, 21), kM, 127, title, P.muted);
         Font& f = g.font(kMono, 38), &fb = g.font(kBold, 38);
         int y = 180;
@@ -57,9 +58,9 @@ public:
             y += 72;
         }
         // Status line becomes the menu's hints.
-        g.fill({0, 587, Gfx::W, 133}, P.bg);
+        g.fill({0, kStatusY - 16, Gfx::W, Gfx::H - kStatusY + 16}, P.bg);
         Font& sf = g.font(kMono, 20);
-        int x = kM, y0 = 603, s = 30;
+        int x = kM, y0 = kStatusY, s = 30;
         auto hint = [&](std::initializer_list<Btn> bs, const char* what) {
             for (Btn b : bs) { badge(g, x, y0, s, b, buttonColor(b), P.dark); x += s + 4; }
             x += 4 + g.draw(sf, x + 4, y0 + (s - sf.lineH()) / 2, what, P.text) + 24;
@@ -72,7 +73,7 @@ public:
 
 private:
     void status(Gfx& g, const EditorView& v) {
-        const int y = 603, s = 30;
+        const int y = kStatusY, s = 30;
         Font& f = g.font(kMono, 20);
         if (v.tap->hasPending()) {
             Btn b = pendingButton(v);
@@ -84,9 +85,9 @@ private:
         modeTags(g, Gfx::W - kM, y, s, g.font(kBold, 18), v, P);
 
         // Commit timer.
-        g.fill({kM, 651, Gfx::W - 2 * kM, 4}, P.surface);
+        g.fill({kM, kStatusY + 44, Gfx::W - 2 * kM, 4}, P.surface);
         if (float t = timerLeft(v); t > 0)
-            g.fill({kM, 651, (int)((Gfx::W - 2 * kM) * t), 4}, buttonColor(pendingButton(v)));
+            g.fill({kM, kStatusY + 44, (int)((Gfx::W - 2 * kM) * t), 4}, buttonColor(pendingButton(v)));
     }
 
     // A small controller diagram; held buttons light up in their colour.

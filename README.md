@@ -19,7 +19,7 @@ indicates the current mode.
 
 ## Styles
 
-Six variations on one Metro-style design, picked in the − app menu:
+Five variations on one Metro-style design, picked in the − app menu:
 highlight *style* and press A, or D-pad left/right, to cycle while the menu
 stays open as a preview. The choice is saved in `settings.ini` next to the
 notes.
@@ -33,7 +33,6 @@ notes.
 | **keys** | Metro's layout where every tile keeps its button's own colour in all modes; the mode shows in the cursor and tags, and a bar on the pending tile counts down to the commit. |
 | **light** | The same as keys in a light, daytime theme. |
 | **focus** | Distraction-free: a quiet top line and a large centred column of text. The status line stays muted while you write and comes up in colour when you act; the commit timer sits under the pending character. |
-| **cross** | Tiles arranged like the controller: a D-pad cross on the left and a face-button diamond on the right, with the mode tags, the cycle and its timer between them. |
 
 All but metro share the ameno conventions (`src/skins/family.h`):
 

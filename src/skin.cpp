@@ -42,7 +42,6 @@ Skin* makeAmeno();
 Skin* makeKeys();
 Skin* makeLight();
 Skin* makeFocus();
-Skin* makeCross();
 
 namespace skins {
 namespace {
@@ -52,7 +51,7 @@ std::string g_path;
 
 const std::vector<Skin*>& all() {
     static const std::vector<Skin*> list = {makeMetro(), makeAmeno(), makeKeys(),
-                                            makeLight(), makeFocus(), makeCross()};
+                                            makeLight(), makeFocus()};
     return list;
 }
 

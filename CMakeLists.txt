@@ -29,7 +29,6 @@ add_executable(padshell
   src/skins/ameno.cpp
   src/skins/keys.cpp
   src/skins/focus.cpp
-  src/skins/cross.cpp
   src/apps/editor.cpp
 )
 target_compile_options(padshell PRIVATE -Wall -Wextra)
