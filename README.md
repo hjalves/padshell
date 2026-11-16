@@ -4,6 +4,8 @@ A Nintendo Switch homebrew "shell": a set of apps in one process, driven
 entirely by the gamepad. The first app is a text editor that you type into with
 a daisywheel-style input method instead of an on-screen keyboard.
 
+![padshell editor](docs/screenshot.png)
+
 The same code builds for desktop Linux (SDL2), so you can iterate without
 copying to the console.
 
