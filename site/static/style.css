@@ -1,0 +1,52 @@
+/* padshell devlog: the app's default "sunset" palette, calm Metro layout. */
+@font-face { font-family: "Space Mono"; src: url("fonts/SpaceMono-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Space Mono"; src: url("fonts/SpaceMono-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+
+:root {
+  --bg: #000;
+  --surface: rgb(30 12 8);
+  --line: rgb(60 28 18);
+  --muted: rgb(205 165 150);
+  --text: rgb(255 248 240);
+  --accent: rgb(255 100 0);
+  --lime: rgb(120 255 40);
+  --mono: "Space Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--bg); color: var(--text); }
+body {
+  margin: 0 auto; max-width: 44rem; padding: 0 1.25rem 3rem;
+  font: 1.0625rem/1.65 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+a { color: var(--accent); text-underline-offset: 0.2em; }
+a:hover { color: var(--text); }
+
+.top { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 1.5rem; padding: 1.5rem 0 1rem; border-bottom: 2px solid var(--line); }
+.brand { font: 700 1.5rem var(--mono); color: var(--text); text-decoration: none; }
+.brand span { color: var(--accent); margin-left: 0.5rem; font-weight: 400; }
+.top nav { display: flex; gap: 1.25rem; font-family: var(--mono); font-size: 0.95rem; }
+.top nav a { color: var(--muted); text-decoration: none; }
+.top nav a:hover { color: var(--accent); }
+
+h1, h2, h3 { font-family: var(--mono); line-height: 1.25; letter-spacing: -0.01em; }
+h1 { font-size: 1.9rem; margin: 2.5rem 0 0.25rem; }
+h2 { font-size: 1.3rem; margin-top: 2.5rem; }
+h3 { font-size: 1.1rem; }
+.date, time { font-family: var(--mono); color: var(--muted); font-size: 0.9rem; }
+.intro { color: var(--muted); margin-top: 2rem; }
+
+.entries { list-style: none; padding: 0; }
+.entries li { padding: 1rem 0; border-bottom: 1px solid var(--line); }
+.entries li a { display: block; font: 700 1.15rem var(--mono); text-decoration: none; margin-top: 0.15rem; }
+.entries li p { margin: 0.35rem 0 0; color: var(--muted); }
+
+article img { max-width: 100%; height: auto; display: block; margin: 1.5rem 0; border: 1px solid var(--line); }
+code { font-family: var(--mono); font-size: 0.9em; background: var(--surface); padding: 0.1em 0.3em; }
+pre { background: var(--surface); padding: 1rem; overflow-x: auto; border-left: 3px solid var(--accent); }
+pre code { background: none; padding: 0; }
+blockquote { margin: 1.5rem 0; padding-left: 1rem; border-left: 3px solid var(--lime); color: var(--muted); }
+
+.pager { display: flex; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding-top: 1rem; border-top: 2px solid var(--line); font-family: var(--mono); font-size: 0.95rem; }
+.pager .next { margin-left: auto; text-align: right; }
+footer { margin-top: 3rem; color: var(--muted); font-size: 0.9rem; }

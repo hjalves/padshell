@@ -1,0 +1,8 @@
+{{- /* Capsule-absolute gemini path of a page, e.g. "/devlog/first-release/".
+       The capsule root is public/gemini/, served at the root of a Gemini host. */ -}}
+{{- $path := "" -}}
+{{- with .OutputFormats.Get "gemini" -}}
+  {{- $prefix := path.Join (urls.Parse site.BaseURL).Path "gemini" -}}
+  {{- $path = strings.TrimPrefix $prefix .RelPermalink | strings.TrimSuffix "index.gmi" -}}
+{{- end -}}
+{{- return $path -}}

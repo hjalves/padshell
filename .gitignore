@@ -1,2 +1,5 @@
 build/
 build-switch/
+site/public/
+site/resources/
+site/.hugo_build.lock

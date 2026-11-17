@@ -1,0 +1,77 @@
+{{- /*
+  Convert a page's Markdown (.RawContent) to gemtext, line by line.
+  Supported: # / ## / ### headings, paragraphs (hard-wrapped lines are
+  joined), - * + lists, > quotes, ``` code fences, links and images on a line
+  of their own (=> lines), inline links (text kept; => lines follow the
+  paragraph), **bold**, *em* and `code` markers (dropped). Images from the page bundle
+  are copied into the capsule next to the page.
+  Not supported: tables, HTML, shortcodes, nested lists (flattened).
+*/ -}}
+{{- $page := . -}}
+{{- $gemDir := path.Join "gemini" (partial "gempath.html" $page) -}}
+{{- $reImgLine := `^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)$` -}}
+{{- $reLinkLine := `^\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)$` -}}
+{{- $reInline := `!?\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)` -}}
+{{- $out := slice -}}
+{{- $para := slice -}}
+{{- $links := slice -}}
+{{- $inFence := false -}}
+{{- $lines := split (replace .RawContent "\r" "") "\n" -}}
+{{- range $lines | append "" -}}
+  {{- $line := . -}}
+  {{- $trim := strings.TrimSpace $line -}}
+  {{- if hasPrefix $trim "```" -}}
+    {{- /* flush paragraph, toggle preformatted */ -}}
+    {{- if $para }}{{ $out = $out | append (delimit $para " ") }}{{ range $links }}{{ $out = $out | append . }}{{ end }}{{ $out = $out | append "" }}{{ $para = slice }}{{ $links = slice }}{{ end -}}
+    {{- $out = $out | append $trim -}}
+    {{- $inFence = not $inFence -}}
+    {{- if not $inFence }}{{ $out = $out | append "" }}{{ end -}}
+  {{- else if $inFence -}}
+    {{- $out = $out | append $line -}}
+  {{- else if eq $trim "" -}}
+    {{- if $para }}{{ $out = $out | append (delimit $para " ") }}{{ range $links }}{{ $out = $out | append . }}{{ end }}{{ $out = $out | append "" }}{{ $para = slice }}{{ $links = slice }}{{ end -}}
+  {{- else -}}
+    {{- $block := "" -}}
+    {{- if findRE $reImgLine $trim -}}
+      {{- $m := index (findRESubmatch $reImgLine $trim) 0 -}}
+      {{- $src := index $m 2 -}}
+      {{- with $page.Resources.Get $src -}}
+        {{- $copy := resources.Copy (path.Join $gemDir $src) . -}}
+        {{- $copy.Publish -}}
+      {{- end -}}
+      {{- $block = printf "=> %s %s" $src (index $m 1) -}}
+    {{- else if findRE $reLinkLine $trim -}}
+      {{- $m := index (findRESubmatch $reLinkLine $trim) 0 -}}
+      {{- $block = printf "=> %s %s" (index $m 2) (index $m 1) -}}
+    {{- else if hasPrefix $trim "#" -}}
+      {{- $block = replaceRE `^#{4,}` "###" $trim -}}
+    {{- else if findRE `^[-*+]\s+` $trim -}}
+      {{- $block = replaceRE `^[-*+]\s+` "* " $trim -}}
+    {{- else if hasPrefix $trim ">" -}}
+      {{- $block = $trim -}}
+    {{- end -}}
+    {{- if $block -}}
+      {{- if $para }}{{ $out = $out | append (delimit $para " ") }}{{ range $links }}{{ $out = $out | append . }}{{ end }}{{ $out = $out | append "" }}{{ $para = slice }}{{ $links = slice }}{{ end -}}
+      {{- /* inline links inside list items and quotes */ -}}
+      {{- if not (hasPrefix $block "=>") -}}
+        {{- range findRESubmatch $reInline $block }}{{ $links = $links | append (printf "=> %s %s" (index . 2) (index . 1)) }}{{ end -}}
+        {{- $block = replaceRE $reInline "$1" $block | replaceRE "\\*\\*|__|`" "" | replaceRE `(^|[\s(])\*([^*\s][^*]*)\*` "$1$2" -}}
+      {{- end -}}
+      {{- $out = $out | append $block -}}
+      {{- /* keep consecutive list items / quote lines together */ -}}
+      {{- if not (or (hasPrefix $block "* ") (hasPrefix $block ">")) }}{{ range $links }}{{ $out = $out | append . }}{{ end }}{{ $links = slice }}{{ $out = $out | append "" }}{{ end -}}
+    {{- else -}}
+      {{- /* paragraph text: close a pending list/quote first */ -}}
+      {{- if and (not $para) $out -}}
+        {{- $last := index $out (sub (len $out) 1) -}}
+        {{- if or (hasPrefix $last "* ") (hasPrefix $last ">") }}{{ range $links }}{{ $out = $out | append . }}{{ end }}{{ $links = slice }}{{ $out = $out | append "" }}{{ end -}}
+      {{- end -}}
+      {{- range findRESubmatch $reInline $trim }}{{ $links = $links | append (printf "=> %s %s" (index . 2) (index . 1)) }}{{ end -}}
+      {{- $para = $para | append (replaceRE $reInline "$1" $trim | replaceRE "\\*\\*|__|`" "" | replaceRE `(^|[\s(])\*([^*\s][^*]*)\*` "$1$2") -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- /* end of input: close a trailing list/quote */ -}}
+{{- range $links }}{{ $out = $out | append . }}{{ end -}}
+{{- $result := delimit $out "\n" | strings.TrimRight "\n" -}}
+{{- return $result -}}

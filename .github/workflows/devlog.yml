@@ -1,0 +1,55 @@
+# Build the devlog (site/) with Hugo and publish the HTML to GitHub Pages.
+# The Gemini capsule (public/gemini/) is attached to each run as an artifact.
+name: devlog
+
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/devlog.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  HUGO_VERSION: 0.170.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Hugo
+        run: |
+          curl -sSLo hugo.deb "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_${HUGO_VERSION}_linux-amd64.deb"
+          sudo dpkg -i hugo.deb
+      - id: pages
+        uses: actions/configure-pages@v5
+      - name: Build
+        working-directory: site
+        run: hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+      - name: Split web and Gemini output
+        run: mv site/public/gemini capsule
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gemini-capsule
+          path: capsule
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

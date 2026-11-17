@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="{{ site.Language.Locale }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} · {{ site.Title }}{{ end }}</title>
+  <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ with .Summary }}{{ . | plainify | truncate 160 }}{{ else }}{{ site.Params.description }}{{ end }}{{ end }}">
+  <link rel="icon" href="{{ "favicon.svg" | relURL }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ "style.css" | relURL }}">
+  {{ with site.Home.OutputFormats.Get "rss" -}}
+  <link rel="alternate" type="application/rss+xml" href="{{ .RelPermalink }}" title="{{ site.Title }}">
+  {{- end }}
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="{{ "" | relURL }}">padshell<span>devlog</span></a>
+    <nav>
+      <a href="{{ "devlog/" | relURL }}">entries</a>
+      <a href="{{ site.Params.repo }}">source</a>
+      {{ with site.Home.OutputFormats.Get "rss" }}<a href="{{ .RelPermalink }}">feed</a>{{ end }}
+    </nav>
+  </header>
+  <main>
+    {{ block "main" . }}{{ end }}
+  </main>
+  <footer>
+    {{ with site.Params.capsule }}Also on Gemini at <a href="{{ . | safeURL }}">{{ . }}</a>, readable in padshell's own browser.{{ else }}padshell is open source: <a href="{{ site.Params.repo }}">source and releases</a>.{{ end }}
+  </footer>
+</body>
+</html>

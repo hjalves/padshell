@@ -1,0 +1,14 @@
+# {{ .Title }}
+
+{{ .Date.Format "2006-01-02" }}
+
+{{ partial "gemtext.html" . }}
+
+=> / {{ site.Title }}
+{{- with .PrevInSection }}
+=> {{ partial "gempath.html" . }} Older: {{ .Title }}
+{{- end }}
+{{- with .NextInSection }}
+=> {{ partial "gempath.html" . }} Newer: {{ .Title }}
+{{- end }}
+=> {{ (.OutputFormats.Get "html").Permalink }} This entry on the web

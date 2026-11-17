@@ -1,0 +1,13 @@
+# {{ site.Title }}
+
+{{ partial "gemtext.html" . }}
+
+## Entries
+
+{{ range where site.RegularPages "Section" "devlog" -}}
+=> {{ partial "gempath.html" . }} {{ .Date.Format "2006-01-02" }} {{ .Title }}
+{{ end }}
+## Links
+
+=> {{ site.Params.repo }} Source code and releases (GitHub)
+=> {{ site.BaseURL }} This log on the web

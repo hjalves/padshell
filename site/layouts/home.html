@@ -1,0 +1,5 @@
+{{ define "main" }}
+<section class="intro">{{ .Content }}</section>
+<h2>Entries</h2>
+{{ partial "entry-list.html" (where site.RegularPages "Section" "devlog") }}
+{{ end }}
