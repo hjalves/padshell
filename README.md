@@ -7,7 +7,10 @@ entirely by the gamepad. It has two apps so far, switched with − :
 you type into with phone-style multi-tap on the face buttons and D-pad (no
 on-screen keyboard).
 
-![padshell editor](docs/screenshot.png)
+padshell is vibe coded: written with an AI coding assistant. Its
+development log is at <https://hjalves.github.io/padshell/>.
+
+![padshell notes editor in the sunset theme, mid-tap](docs/screenshot.png)
 
 The same code builds for desktop Linux (SDL2), so you can iterate without
 copying to the console.
