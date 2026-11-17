@@ -6,8 +6,9 @@ from the same Markdown:
 * `public/`: the website, published to GitHub Pages by
   `.github/workflows/devlog.yml` on every push to `main` that touches `site/`.
 * `public/gemini/`: the Gemini capsule. CI attaches it to each run as the
-  `gemini-capsule` artifact; upload it as the root of a Gemini host and set
-  `params.capsule` in `hugo.toml` to its address.
+  `gemini-capsule` artifact. It is served at `gemini://gemini.hjalves.dev/padshell/`
+  (`params.capsulePath`); copy it there with
+  `rsync -a --delete public/gemini/ dk@atom:/srv/gemini/gemini.hjalves.dev/padshell/`.
 
 ## Writing an entry
 
@@ -48,8 +49,9 @@ Avoid tables, raw HTML, shortcodes and nested lists.
 
 ```sh
 hugo server -D                       # website at http://localhost:1313/padshell/
-hugo -D && tools/serve-gemini.py     # capsule at gemini://<this machine>/
+hugo -D && tools/serve-gemini.py     # capsule at gemini://<this machine>/padshell/
 ```
 
 `serve-gemini.py` is a small preview server with a self-signed certificate;
-open it from padshell on the Switch with X and the machine's LAN address.
+open it from padshell on the Switch with X and the machine's LAN address
+followed by `/padshell/`.

@@ -3,4 +3,4 @@
 {{ range .RegularPages -}}
 => {{ partial "gempath.html" . }} {{ .Date.Format "2006-01-02" }} {{ .Title }}
 {{ end }}
-=> / Home
+=> {{ partial "gempath.html" site.Home }} {{ site.Title }}

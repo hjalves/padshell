@@ -8,7 +8,11 @@
   Not supported: tables, HTML, shortcodes, nested lists (flattened).
 */ -}}
 {{- $page := . -}}
-{{- $gemDir := path.Join "gemini" (partial "gempath.html" $page) -}}
+{{- /* Output folder of this page's gemtext, e.g. "gemini/devlog/my-entry" */ -}}
+{{- $gemDir := "" -}}
+{{- with $page.OutputFormats.Get "gemini" -}}
+  {{- $gemDir = strings.TrimPrefix (urls.Parse site.BaseURL).Path .RelPermalink | path.Dir -}}
+{{- end -}}
 {{- $reImgLine := `^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)$` -}}
 {{- $reLinkLine := `^\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)$` -}}
 {{- $reInline := `!?\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)` -}}

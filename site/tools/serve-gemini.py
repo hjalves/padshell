@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Serve a folder over Gemini for previewing the capsule (not for production).
 
-usage: serve-gemini.py [root] [port]   (defaults: public/gemini 1965)
+usage: serve-gemini.py [root] [port] [mount]
+       (defaults: public/gemini 1965 /padshell/, matching params.capsulePath)
 
 Makes a self-signed certificate for this machine on first run (needs openssl)
 and keeps it in ~/.cache/padshell-gemini/, so TOFU clients see the same one.
@@ -12,6 +13,7 @@ from urllib.parse import unquote, urlsplit
 
 root = Path(sys.argv[1] if len(sys.argv) > 1 else "public/gemini").resolve()
 port = int(sys.argv[2]) if len(sys.argv) > 2 else 1965
+mount = "/" + (sys.argv[3] if len(sys.argv) > 3 else "/padshell/").strip("/")
 mimetypes.add_type("text/gemini", ".gmi")
 
 certdir = Path.home() / ".cache" / "padshell-gemini"
@@ -39,7 +41,12 @@ class Handler(socketserver.StreamRequestHandler):
         url = urlsplit(line)
         if url.scheme != "gemini":
             return self.respond("59 Bad request")
-        target = (root / unquote(url.path).lstrip("/")).resolve()
+        path = unquote(url.path) or "/"
+        if path in ("/", mount) and mount != "/":
+            return self.respond(f"31 {mount}/")
+        if not (path + "/").startswith(mount.rstrip("/") + "/"):
+            return self.respond("51 Not found")
+        target = (root / path[len(mount.rstrip("/")):].lstrip("/")).resolve()
         if not target.is_relative_to(root):
             return self.respond("51 Not found")
         if target.is_dir():
@@ -64,6 +71,6 @@ class Server(socketserver.ThreadingTCPServer):
         return ctx.wrap_socket(sock, server_side=True), addr
 
 
-print(f"serving {root} on gemini://{socket.gethostname()}:{port}/" if port != 1965
-      else f"serving {root} on gemini://{socket.gethostname()}/", flush=True)
+host = socket.gethostname() + ("" if port == 1965 else f":{port}")
+print(f"serving {root} on gemini://{host}{mount.rstrip('/')}/", flush=True)
 Server(("", port), Handler).serve_forever()

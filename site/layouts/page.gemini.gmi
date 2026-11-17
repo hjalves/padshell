@@ -4,7 +4,7 @@
 
 {{ partial "gemtext.html" . }}
 
-=> / {{ site.Title }}
+=> {{ partial "gempath.html" site.Home }} {{ site.Title }}
 {{- with .PrevInSection }}
 => {{ partial "gempath.html" . }} Older: {{ .Title }}
 {{- end }}
