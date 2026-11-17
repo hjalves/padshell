@@ -1,5 +1,6 @@
-# Build the devlog (site/) with Hugo and publish the HTML to GitHub Pages.
-# The Gemini capsule (public/gemini/) is attached to each run as an artifact.
+# Build the devlog (site/) with Hugo and publish it to GitHub Pages: the HTML,
+# plus the Gemini capsule packed as capsule.tar.gz. The Gemini server pulls
+# that file (padshell-capsule-sync on atom), so it needs no credentials here.
 name: devlog
 
 on:
@@ -34,12 +35,10 @@ jobs:
       - name: Build
         working-directory: site
         run: hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
-      - name: Split web and Gemini output
-        run: mv site/public/gemini capsule
-      - uses: actions/upload-artifact@v4
-        with:
-          name: gemini-capsule
-          path: capsule
+      - name: Pack the Gemini capsule
+        run: |
+          mv site/public/gemini capsule
+          tar -C capsule --owner=0 --group=0 --numeric-owner -czf site/public/capsule.tar.gz .
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site/public

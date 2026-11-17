@@ -8,7 +8,7 @@ disableKinds = ["taxonomy", "term"]
   repo = "https://github.com/hjalves/padshell"
   # Address of the Gemini capsule once it is hosted, e.g. "gemini://example.org/".
   # Leave empty to hide the links to it.
-  capsule = ""
+  capsule = "gemini://gemini.hjalves.dev/padshell/"
   # Path the capsule is served under on its Gemini host ("/" for the root).
   capsulePath = "/padshell/"
 

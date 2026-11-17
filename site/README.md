@@ -5,9 +5,11 @@ from the same Markdown:
 
 * `public/`: the website, published to GitHub Pages by
   `.github/workflows/devlog.yml` on every push to `main` that touches `site/`.
-* `public/gemini/`: the Gemini capsule. CI attaches it to each run as the
-  `gemini-capsule` artifact. It is served at `gemini://gemini.hjalves.dev/padshell/`
-  (`params.capsulePath`); copy it there with
+* `public/gemini/`: the Gemini capsule, served at
+  `gemini://gemini.hjalves.dev/padshell/` (`params.capsulePath`). CI publishes
+  it as `capsule.tar.gz` next to the website; on the Gemini server (atom) a
+  systemd timer, `padshell-capsule-sync.timer`, fetches it every 5 minutes and
+  installs it when it changes. To deploy by hand instead:
   `rsync -a --delete public/gemini/ dk@atom:/srv/gemini/gemini.hjalves.dev/padshell/`.
 
 ## Writing an entry
